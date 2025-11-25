@@ -21,6 +21,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Star, Users, TrendingUp, Search, Check, AlertTriangle, MoreVertical, Lock } from "lucide-react";
 import type { Team, Player, TeamPlayer } from "@shared/schema";
 
@@ -37,6 +44,8 @@ export default function Squad() {
   const [teamName, setTeamName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [positionFilter, setPositionFilter] = useState("All");
+  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [bencedPlayerToSwap, setBencedPlayerToSwap] = useState<Player | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -190,6 +199,32 @@ export default function Squad() {
     setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
   };
 
+  const handleBringBackClick = (benchedPlayer: Player) => {
+    setBencedPlayerToSwap(benchedPlayer);
+    setSwapDialogOpen(true);
+  };
+
+  const handleSwapWithStarter = (starter: Player) => {
+    if (!bencedPlayerToSwap) return;
+    
+    // Swap: benched player goes to starters, starter goes to bench
+    setBenchPlayerId(starter.id);
+    
+    // If benching the captain, make the incoming player captain
+    if (starter.id === captainId) {
+      setCaptainId(bencedPlayerToSwap.id);
+    }
+    
+    setSwapDialogOpen(false);
+    setBencedPlayerToSwap(null);
+  };
+
+  // Get starters that can be benched (for the swap dialog)
+  const getBenchableStarters = (): Player[] => {
+    const starters = selectedPlayers.filter(p => p.id !== benchPlayerId);
+    return starters.filter(starter => canBenchPlayer(starter));
+  };
+
   const filteredPlayers = players?.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPosition = positionFilter === "All" || p.position === positionFilter;
@@ -228,6 +263,58 @@ export default function Squad() {
           </div>
         </Card>
       </div>
+
+      <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bring {bencedPlayerToSwap?.name} back to starting XI</DialogTitle>
+            <DialogDescription>
+              Select a starter to move to the bench. Players with a lock icon cannot be benched as they're your only one at that position.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {selectedPlayers
+              .filter(p => p.id !== benchPlayerId)
+              .map((starter) => {
+                const canBench = canBenchPlayer(starter);
+                const samePositionCount = selectedPlayers
+                  .filter(p => p.position === starter.position && p.id !== benchPlayerId)
+                  .length;
+                const isOnlyPosition = samePositionCount === 1;
+                
+                return (
+                  <Button
+                    key={starter.id}
+                    onClick={() => handleSwapWithStarter(starter)}
+                    disabled={!canBench}
+                    variant="outline"
+                    className="w-full justify-start h-auto p-3"
+                    data-testid={`button-swap-${starter.id}`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <PositionBadge position={starter.position} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-left">{starter.name}</span>
+                            {starter.isInForm && <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" />}
+                          </div>
+                          <span className="text-xs text-muted-foreground">{starter.price}M</span>
+                        </div>
+                      </div>
+                      {isOnlyPosition && (
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Only {starter.position}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Button>
+                );
+              })}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="space-y-4">
@@ -412,9 +499,8 @@ export default function Squad() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => {
-                                    setBenchPlayerId(null);
-                                  }}
+                                  onClick={() => handleBringBackClick(player)}
+                                  disabled={getBenchableStarters().length === 0}
                                   data-testid={`menu-item-bring-back-${player.id}`}
                                 >
                                   Bring back to starting XI

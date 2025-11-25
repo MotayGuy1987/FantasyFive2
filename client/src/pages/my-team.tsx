@@ -84,10 +84,21 @@ export default function MyTeam() {
     }
   }, [isAuthenticated, authLoading, toast]);
 
-  const { data: players, isLoading: playersLoading } = useQuery<Player[]>({
+  const { data: players, isLoading: playersLoading, error: playersError } = useQuery<Player[]>({
     queryKey: ["/api/players"],
     enabled: isAuthenticated,
   });
+
+  useEffect(() => {
+    if (playersError) {
+      console.error("Players query error:", playersError);
+      toast({
+        title: "Error Loading Players",
+        description: playersError.message,
+        variant: "destructive",
+      });
+    }
+  }, [playersError, toast]);
 
   const { data: team } = useQuery<Team>({
     queryKey: ["/api/team"],
@@ -245,6 +256,51 @@ export default function MyTeam() {
         </TabsList>
 
         <TabsContent value="squad" className="space-y-6">
+          {selectedPlayers.length === 0 && players && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Build Your Squad
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £50M)</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  {sortedAvailable.map((player) => {
+                    const isSelected = selectedPlayers.some(p => p.id === player.id);
+                    const isBench = benchPlayerId === player.id;
+                    return (
+                      <Button
+                        key={player.id}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
+                            if (benchPlayerId === player.id) setBenchPlayerId(null);
+                            if (captainId === player.id) setCaptainId(null);
+                          } else {
+                            if (selectedPlayers.length < 6) {
+                              setSelectedPlayers([...selectedPlayers, player]);
+                            }
+                          }
+                        }}
+                        variant={isSelected ? "default" : "outline"}
+                        className="w-full justify-start"
+                        disabled={selectedPlayers.length >= 6 && !isSelected}
+                        data-testid={`button-squad-player-${player.id}`}
+                      >
+                        <PositionBadge position={player.position} />
+                        <span className="ml-2 flex-1 text-left">{player.name}</span>
+                        <span className="text-xs">£{player.price}M</span>
+                        {isSelected && <Check className="h-4 w-4 ml-2" />}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {currentGameweek && gameweekScore && playerPerformances && (
             <Card>
               <CardHeader>

@@ -200,6 +200,22 @@ export default function MyTeam() {
     isOnBench: benchPlayerId === p.id,
   }));
 
+  // Sort players by price (descending) with bench at bottom
+  const sortedSelectedPlayers = [...selectedPlayers].sort((a, b) => {
+    const aIsBench = benchPlayerId === a.id;
+    const bIsBench = benchPlayerId === b.id;
+    
+    // If one is bench and other isn't, bench goes to bottom
+    if (aIsBench && !bIsBench) return 1;
+    if (!aIsBench && bIsBench) return -1;
+    
+    // Otherwise sort by price descending (highest first)
+    return (b.price || 0) - (a.price || 0);
+  });
+
+  // Sort available players by price descending
+  const sortedAvailable = [...filteredAvailable].sort((a, b) => (b.price || 0) - (a.price || 0));
+
   const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut.position, selectedIn.position, teamPlayersData) : null;
   const canMakeTransfer = selectedOut && selectedIn && currentGameweek && (transferValidation?.canTransfer ?? true);
 
@@ -241,7 +257,7 @@ export default function MyTeam() {
                 </div>
                 {selectedPlayers.length > 0 && playerPerformances && (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {selectedPlayers.map((player) => {
+                    {sortedSelectedPlayers.map((player) => {
                       const perf = playerPerformances.find(p => p.playerId === player.id);
                       const isBenched = player.id === benchPlayerId;
                       return (
@@ -279,7 +295,7 @@ export default function MyTeam() {
               <CardTitle>Current Squad ({selectedPlayers.length}/6)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedPlayers.map((player) => {
+              {sortedSelectedPlayers.map((player) => {
                 const isBench = benchPlayerId === player.id;
                 const isCaptain = captainId === player.id;
                 return (
@@ -363,7 +379,7 @@ export default function MyTeam() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  {selectedPlayers.map((player) => (
+                  {sortedSelectedPlayers.map((player) => (
                     <Button
                       key={player.id}
                       onClick={() => setSelectedOut(player)}
@@ -395,7 +411,7 @@ export default function MyTeam() {
                   data-testid="input-search-transfers"
                 />
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                  {filteredAvailable.map((player) => (
+                  {sortedAvailable.map((player) => (
                     <Button
                       key={player.id}
                       onClick={() => setSelectedIn(player)}

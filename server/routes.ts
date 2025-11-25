@@ -140,7 +140,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const team = await storage.getTeamByUserId(userId);
-      res.json(team || null);
+      const user = await storage.getUser(userId);
+      
+      if (!team) {
+        return res.json(null);
+      }
+      
+      res.json({ ...team, teamName: user?.teamName });
     } catch (error) {
       console.error("Error fetching team:", error);
       res.status(500).json({ message: "Failed to fetch team" });

@@ -123,3 +123,30 @@ Core tables:
 - Environment variable `DATABASE_URL` required for connection
 - Migration files stored in `./migrations` directory
 - Schema defined in `shared/schema.ts` for client/server sharing
+
+## Deployment & Database Status
+
+**Production Deployment**
+- App deployed to Railway at live URL using GitHub integration
+- PostgreSQL database hosted on Neon (serverless)
+- Direct Neon connection used (not pooled) for DDL operations
+
+**Database Migration Status** ✓ COMPLETE
+- 24 Players migrated from local development DB to Neon
+- 6 Users migrated (including admin@admin.com)
+- 1 Active Gameweek (Gameweek 1)
+- 2 Teams with full squad selections (admin & Sohan)
+- 12 Team Players (6 per team with captain flags)
+- 1 Gameweek Score recorded
+- 5 Player Performances with match statistics
+
+**Critical Fixes Applied**
+- Logout functionality: Backend uses `session.destroy()` with full page redirect via `window.location.href`
+- Position validation: Enforces minimum 1 defender, 1 midfielder, 1 forward
+- Transfer system: Position-locked transfers with -2 point penalties
+- Point calculation: Position-specific multipliers with captain 2x bonus
+
+**Admin Credentials**
+- Email: admin@admin.com
+- Password: admin@123
+- Admin features: Gameweek management, player performance input, score finalization

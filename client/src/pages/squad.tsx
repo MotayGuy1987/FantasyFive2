@@ -169,6 +169,9 @@ export default function Squad() {
     saveTeamMutation.mutate({ teamName, players: playersData });
   };
 
+  // Team name is read-only after being set
+  const isTeamNameLocked = user && typeof user === 'object' && user !== null && 'teamName' in user && (user as any).teamName;
+
   // Helper to check if a player can be benched (not the only one of their position)
   const canBenchPlayer = (player: Player): boolean => {
     const starters = selectedPlayers.filter(p => p.id !== benchPlayerId);
@@ -324,14 +327,18 @@ export default function Squad() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="teamName">Team Name</Label>
+                <Label htmlFor="teamName">Team Name {isTeamNameLocked && <span className="text-xs text-muted-foreground">(locked)</span>}</Label>
                 <Input
                   id="teamName"
                   placeholder="Enter your team name"
                   value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
+                  onChange={(e) => !isTeamNameLocked && setTeamName(e.target.value)}
+                  disabled={isTeamNameLocked}
                   data-testid="input-team-name"
                 />
+                {isTeamNameLocked && (
+                  <p className="text-xs text-muted-foreground mt-1">Team name cannot be changed after first save</p>
+                )}
               </div>
             </CardContent>
           </Card>

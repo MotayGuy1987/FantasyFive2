@@ -91,6 +91,19 @@ function calculatePlayerPoints(
   return points;
 }
 
+function getPositionIndex(positionName: string): number {
+  switch (positionName) {
+    case "Defender":
+      return 0;
+    case "Midfielder":
+      return 1;
+    case "Forward":
+      return 2;
+    default:
+      return 1; // Default to Midfielder
+  }
+}
+
 function generateJoinCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
@@ -341,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             playerId: playerInId,
             isCaptain: tp.isCaptain,
             isOnBench: tp.isOnBench,
-            position: tp.position,
+            position: getPositionIndex(playerIn.position),
           });
         } else {
           await storage.createTeamPlayer({

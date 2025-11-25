@@ -186,6 +186,47 @@ export default function MyTeam() {
     },
   });
 
+  const saveSquadMutation = useMutation({
+    mutationFn: async () => {
+      if (!teamName.trim()) {
+        throw new Error("Team name is required");
+      }
+      if (selectedPlayers.length !== 6) {
+        throw new Error("You must select exactly 6 players");
+      }
+      if (!captainId) {
+        throw new Error("You must select a captain");
+      }
+      if (!benchPlayerId) {
+        throw new Error("You must select a bench player");
+      }
+      
+      const requestedPlayers = selectedPlayers.map((p, idx) => ({
+        playerId: p.id,
+        isCaptain: p.id === captainId,
+        isOnBench: p.id === benchPlayerId,
+        position: idx,
+      }));
+      
+      await apiRequest("POST", "/api/team", { teamName, players: requestedPlayers });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/team/players"] });
+      toast({
+        title: "Success",
+        description: "Squad saved successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (authLoading || playersLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -246,13 +287,34 @@ export default function MyTeam() {
     });
   };
 
+  const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId;
+
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">My Team</h1>
-        <p className="text-muted-foreground">
-          Manage your squad, set captains, and make transfers
-        </p>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">My Team</h1>
+          <p className="text-muted-foreground">
+            Manage your squad, set captains, and make transfers
+          </p>
+        </div>
+
+        {selectedPlayers.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="team-name">Team Name</Label>
+            <Input
+              id="team-name"
+              placeholder="Enter your team name"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              disabled={isSquadComplete}
+              data-testid="input-team-name"
+            />
+            {isSquadComplete && (
+              <p className="text-xs text-muted-foreground">Team name is locked after squad is saved</p>
+            )}
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="squad" className="space-y-6">
@@ -361,6 +423,31 @@ export default function MyTeam() {
               <CardTitle>Current Squad ({selectedPlayers.length}/6)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {selectedPlayers.length > 0 && (
+                <div className="pb-4 border-b space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Squad Status</p>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedPlayers.length < 6 && `Select ${6 - selectedPlayers.length} more player${6 - selectedPlayers.length !== 1 ? 's' : ''}`}
+                        {selectedPlayers.length === 6 && !captainId && 'Select a captain'}
+                        {selectedPlayers.length === 6 && captainId && !benchPlayerId && 'Select a bench player'}
+                        {isSquadComplete && 'Ready to save!'}
+                      </p>
+                    </div>
+                  </div>
+                  {isSquadComplete && (
+                    <Button
+                      onClick={() => saveSquadMutation.mutate()}
+                      disabled={saveSquadMutation.isPending}
+                      className="w-full"
+                      data-testid="button-save-squad"
+                    >
+                      {saveSquadMutation.isPending ? "Saving..." : "Save Squad"}
+                    </Button>
+                  )}
+                </div>
+              )}
               {sortedSelectedPlayers.map((player) => {
                 const isBench = benchPlayerId === player.id;
                 const isCaptain = captainId === player.id;
@@ -627,36 +714,58 @@ export default function MyTeam() {
       <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bring {bencedPlayerToSwap?.name} back to starting XI</DialogTitle>
+            <DialogTitle>Bench/Starter Swap</DialogTitle>
             <DialogDescription>
-              Select which starter to move to the bench
+              {bencedPlayerToSwap && benchPlayerId === bencedPlayerToSwap.id
+                ? `Bring ${bencedPlayerToSwap.name} back to starting XI - select which starter to move to the bench`
+                : bencedPlayerToSwap 
+                ? `Move ${bencedPlayerToSwap.name} to the bench - select which bench player to bring in`
+                : 'Select a player to swap'}
             </DialogDescription>
           </DialogHeader>
           {bencedPlayerToSwap && (
             <div className="space-y-4">
               {selectedPlayers
                 .filter(p => p.id !== bencedPlayerToSwap.id)
-                .map((player) => (
-                  <Button
-                    key={player.id}
-                    onClick={() => {
-                      const newSelectedPlayers = selectedPlayers.map(p =>
-                        p.id === bencedPlayerToSwap.id ? player : p.id === player.id ? bencedPlayerToSwap : p
-                      );
-                      setSelectedPlayers(newSelectedPlayers);
-                      setBencedPlayerToSwap(bencedPlayerToSwap.id === benchPlayerId ? player.id : benchPlayerId);
-                      setSwapDialogOpen(false);
-                    }}
-                    variant="outline"
-                    className="w-full justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <PositionBadge position={player.position} />
-                      {player.name}
-                    </div>
-                    <span className="text-xs">£{player.price}M</span>
-                  </Button>
-                ))}
+                .map((player) => {
+                  const isBench = player.id === benchPlayerId;
+                  const canSwap = player.position === bencedPlayerToSwap.position;
+                  
+                  return (
+                    <Button
+                      key={player.id}
+                      onClick={() => {
+                        if (benchPlayerId === bencedPlayerToSwap.id) {
+                          // Bringing bench player to starting XI
+                          setBenchPlayerId(player.id);
+                        } else {
+                          // Moving starter to bench
+                          setBenchPlayerId(bencedPlayerToSwap.id);
+                        }
+                        setSwapDialogOpen(false);
+                      }}
+                      variant={isBench ? "default" : "outline"}
+                      disabled={!canSwap}
+                      className="w-full justify-between"
+                      data-testid={`button-swap-player-${player.id}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <PositionBadge position={player.position} />
+                        {player.name}
+                        {isBench && <Badge variant="outline" className="text-xs">Current Bench</Badge>}
+                      </div>
+                      <span className="text-xs">£{player.price}M</span>
+                    </Button>
+                  );
+                })}
+              {selectedPlayers.some(p => p.id !== bencedPlayerToSwap.id && p.position !== bencedPlayerToSwap.position) && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Can only swap players with the same position ({bencedPlayerToSwap.position})
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           )}
         </DialogContent>

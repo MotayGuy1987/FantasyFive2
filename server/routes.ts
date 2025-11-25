@@ -268,6 +268,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/gameweek/:gameweekId/player-performances", isAuthenticated, async (req, res) => {
+    try {
+      const { gameweekId } = req.params;
+      const performances = await storage.getAllPlayerPerformances(gameweekId);
+      res.json(performances);
+    } catch (error) {
+      console.error("Error fetching player performances:", error);
+      res.status(500).json({ message: "Failed to fetch player performances" });
+    }
+  });
+
   app.post("/api/transfers", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;

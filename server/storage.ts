@@ -63,6 +63,7 @@ export interface IStorage {
   setActiveGameweek(gameweekId: string): Promise<void>;
   
   getPlayerPerformance(playerId: string, gameweekId: string): Promise<PlayerPerformance | undefined>;
+  getAllPlayerPerformances(gameweekId: string): Promise<(PlayerPerformance & { player: Player })[]>;
   createPlayerPerformance(performance: InsertPlayerPerformance): Promise<PlayerPerformance>;
   upsertPlayerPerformance(performance: InsertPlayerPerformance): Promise<PlayerPerformance>;
   
@@ -225,6 +226,19 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return performance;
+  }
+
+  async getAllPlayerPerformances(gameweekId: string): Promise<(PlayerPerformance & { player: Player })[]> {
+    const results = await db
+      .select()
+      .from(playerPerformances)
+      .innerJoin(players, eq(playerPerformances.playerId, players.id))
+      .where(eq(playerPerformances.gameweekId, gameweekId));
+    
+    return results.map((r) => ({
+      ...r.player_performances,
+      player: r.players,
+    }));
   }
 
   async createPlayerPerformance(performanceData: InsertPlayerPerformance): Promise<PlayerPerformance> {

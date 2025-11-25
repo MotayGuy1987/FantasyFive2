@@ -29,7 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Star, Users, TrendingUp, Search, Check, AlertTriangle, MoreVertical, Lock } from "lucide-react";
-import type { Team, Player, TeamPlayer } from "@shared/schema";
+import type { Team, Player, TeamPlayer, Gameweek, PlayerPerformance } from "@shared/schema";
 
 const BUDGET = 50.0;
 const SQUAD_SIZE = 5;
@@ -74,6 +74,21 @@ export default function Squad() {
   const { data: existingTeamPlayers } = useQuery<(TeamPlayer & { player: Player })[]>({
     queryKey: ["/api/team/players"],
     enabled: isAuthenticated && !!team,
+  });
+
+  const { data: currentGameweek } = useQuery<Gameweek>({
+    queryKey: ["/api/gameweeks/current"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: gameweekScore } = useQuery<{ points: number }>({
+    queryKey: ["/api/team/gameweek-score", currentGameweek?.id],
+    enabled: isAuthenticated && !!currentGameweek,
+  });
+
+  const { data: playerPerformances } = useQuery<(PlayerPerformance & { player: Player })[]>({
+    queryKey: ["/api/gameweek", currentGameweek?.id, "player-performances"],
+    enabled: isAuthenticated && !!currentGameweek,
   });
 
   useEffect(() => {
@@ -321,6 +336,43 @@ export default function Squad() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="space-y-4">
+          {currentGameweek && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between gap-2">
+                  <span>Gameweek {currentGameweek.number} Scores</span>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center border-b pb-4">
+                  <div className="text-xs text-muted-foreground mb-1">Team Total</div>
+                  <div className="text-3xl font-bold text-primary">{gameweekScore?.points || 0} pts</div>
+                </div>
+                {selectedPlayers.length > 0 && playerPerformances && (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {selectedPlayers.map((player) => {
+                      const perf = playerPerformances.find(p => p.playerId === player.id);
+                      const isBenched = player.id === benchPlayerId;
+                      return (
+                        <div key={player.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div className="flex items-center gap-2 flex-1">
+                            <PositionBadge position={player.position} />
+                            <span className="font-medium text-sm">{player.name}</span>
+                            {isBenched && <Badge variant="outline" className="text-xs">Bench</Badge>}
+                          </div>
+                          <div className="font-mono text-sm font-bold text-primary">
+                            {perf?.points || 0} pts
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Team Details</CardTitle>

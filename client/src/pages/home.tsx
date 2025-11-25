@@ -33,6 +33,9 @@ export default function Home() {
   const { data: team, isLoading: teamLoading } = useQuery<Team>({
     queryKey: ["/api/team"],
     enabled: isAuthenticated,
+    staleTime: 10000, // Data is fresh for 10 seconds
+    refetchInterval: 15000, // Refetch total points every 15 seconds
+    refetchIntervalInBackground: true,
   });
 
   const { data: currentGameweek, isLoading: gameweekLoading } = useQuery<Gameweek>({
@@ -48,6 +51,9 @@ export default function Home() {
   const { data: gameweekScore } = useQuery<{ points: number }>({
     queryKey: ["/api/team/gameweek-score", currentGameweek?.id],
     enabled: isAuthenticated && !!currentGameweek,
+    staleTime: 5000, // Data is fresh for 5 seconds
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true, // Keep refetching even when tab is not focused
   });
 
   const { data: chipsUsed } = useQuery<Chip[]>({

@@ -120,10 +120,14 @@ export default function Admin() {
       await apiRequest("POST", "/api/admin/performances", data);
     },
     onSuccess: () => {
+      // Invalidate all caches to ensure all users see updated scores
       queryClient.invalidateQueries({ queryKey: ["/api/gameweeks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/team/gameweek-score"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       toast({
         title: "Success",
-        description: "Performances submitted successfully!",
+        description: "Performances submitted successfully! All managers are seeing the updated scores.",
       });
       setPerformances({});
     },

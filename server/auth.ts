@@ -12,8 +12,10 @@ function hashPassword(password: string): string {
   return `${salt}:${hash}`;
 }
 
-function verifyPassword(password: string, hash: string): boolean {
+function verifyPassword(password: string, hash: string | null): boolean {
+  if (!hash) return false;
   const [salt, storedHash] = hash.split(":");
+  if (!salt || !storedHash) return false;
   const iterations = 100000;
   const keylen = 64;
   const computedHash = crypto.pbkdf2Sync(password, salt, iterations, keylen, "sha256").toString("hex");

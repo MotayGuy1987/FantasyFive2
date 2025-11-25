@@ -1,6 +1,15 @@
+import crypto from "crypto";
 import { db } from "./db";
 import { players, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+
+function hashPassword(password: string): string {
+  const iterations = 100000;
+  const keylen = 64;
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.pbkdf2Sync(password, salt, iterations, keylen, "sha256").toString("hex");
+  return `${salt}:${hash}`;
+}
 
 const PLAYERS_DATA = [
   { name: "Sohan", position: "Midfielder", price: "12.5" },
@@ -61,11 +70,18 @@ export async function seedDatabase() {
       await db.insert(users).values({
         id: "admin-user-id",
         email: adminEmail,
+        password: hashPassword("admin1"),
         firstName: "Admin",
         lastName: "User",
         profileImageUrl: null,
       });
       console.log("Created admin user");
+    } else if (!existingAdmin.password) {
+      // Update existing admin user with password
+      await db.update(users)
+        .set({ password: hashPassword("admin1") })
+        .where(eq(users.email, adminEmail));
+      console.log("Updated admin user with password");
     }
 
     console.log("Database seed completed successfully!");

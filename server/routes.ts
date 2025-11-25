@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
 import { z } from "zod";
 
 const createTeamSchema = z.object({
@@ -98,8 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = req.user;
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -119,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/team", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const team = await storage.getTeamByUserId(userId);
       res.json(team || null);
     } catch (error) {
@@ -130,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/team/players", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const team = await storage.getTeamByUserId(userId);
       
       if (!team) {
@@ -147,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/team", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const validation = createTeamSchema.safeParse(req.body);
       if (!validation.success) {
@@ -176,8 +175,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (captainCount !== 1 || benchCount !== 1) {
         return res.status(400).json({ message: "Must have exactly 1 captain and 1 bench player" });
       }
-
-      await storage.upsertUser({ id: userId, teamName });
 
       let team = await storage.getTeamByUserId(userId);
       if (!team) {
@@ -225,10 +222,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/gameweeks", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (user?.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -248,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/team/gameweek-score/:gameweekId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { gameweekId } = req.params;
       
       const team = await storage.getTeamByUserId(userId);
@@ -266,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transfers", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const validation = createTransferSchema.safeParse(req.body);
       if (!validation.success) {
@@ -348,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/transfers", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const team = await storage.getTeamByUserId(userId);
       
       if (!team) {
@@ -365,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/leagues/my-leagues", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const leagues = await storage.getLeaguesByUser(userId);
       res.json(leagues);
     } catch (error) {
@@ -376,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/leagues", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const validation = createLeagueSchema.safeParse(req.body);
       if (!validation.success) {
@@ -411,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/leagues/join", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const validation = joinLeagueSchema.safeParse(req.body);
       if (!validation.success) {
@@ -484,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chips/activate", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const validation = activateChipSchema.safeParse(req.body);
       if (!validation.success) {
@@ -523,7 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chips", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const team = await storage.getTeamByUserId(userId);
       
       if (!team) {
@@ -540,10 +537,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/performances", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (user?.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 

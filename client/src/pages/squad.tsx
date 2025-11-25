@@ -14,7 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PositionBadge } from "@/components/position-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Star, Users, TrendingUp, Search, Check, AlertTriangle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Star, Users, TrendingUp, Search, Check, AlertTriangle, MoreVertical, Lock } from "lucide-react";
 import type { Team, Player, TeamPlayer } from "@shared/schema";
 
 const BUDGET = 50.0;
@@ -153,6 +160,36 @@ export default function Squad() {
     saveTeamMutation.mutate({ teamName, players: playersData });
   };
 
+  // Helper to check if a player can be benched (not the only one of their position)
+  const canBenchPlayer = (player: Player): boolean => {
+    const starters = selectedPlayers.filter(p => p.id !== benchPlayerId);
+    const samePositionCount = starters.filter(p => p.position === player.position).length;
+    return samePositionCount > 1;
+  };
+
+  const handleMakeCaptain = (playerId: string) => {
+    setCaptainId(playerId);
+  };
+
+  const handleBenchPlayer = (player: Player) => {
+    if (!canBenchPlayer(player)) return;
+    
+    setBenchPlayerId(player.id);
+    // If benching the captain, make them captain
+    if (player.id === captainId && benchPlayerId !== player.id) {
+      const starters = selectedPlayers.filter(p => p.id !== player.id);
+      if (starters.length > 0) {
+        setCaptainId(starters[0].id);
+      }
+    }
+  };
+
+  const handleRemovePlayer = (player: Player) => {
+    if (player.id === captainId) setCaptainId(null);
+    if (player.id === benchPlayerId) setBenchPlayerId(null);
+    setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
+  };
+
   const filteredPlayers = players?.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPosition = positionFilter === "All" || p.position === positionFilter;
@@ -263,46 +300,74 @@ export default function Squad() {
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Starting XI ({starterPlayers.length}/{SQUAD_SIZE})</h3>
                     <div className="space-y-2">
-                      {starterPlayers.map((player) => (
-                        <div
-                          key={player.id}
-                          className="flex items-center justify-between p-2 rounded-md bg-muted/50"
-                          data-testid={`selected-player-${player.name.toLowerCase().replace(' ', '-')}`}
-                        >
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <PositionBadge position={player.position} />
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="font-medium truncate">{player.name}</span>
-                              {player.isInForm && <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" />}
+                      {starterPlayers.map((player) => {
+                        const canBench = canBenchPlayer(player);
+                        const samePositionCount = starterPlayers.filter(p => p.position === player.position).length;
+                        const isOnlyPosition = samePositionCount === 1;
+                        
+                        return (
+                          <div
+                            key={player.id}
+                            className="flex items-center justify-between p-2 rounded-md bg-muted/50"
+                            data-testid={`selected-player-${player.name.toLowerCase().replace(' ', '-')}`}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <PositionBadge position={player.position} />
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-medium truncate">{player.name}</span>
+                                {player.isInForm && <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" />}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="font-mono text-sm">{player.price}M</span>
+                              {player.id === captainId && (
+                                <Badge variant="default" className="font-mono" data-testid={`badge-captain-${player.id}`}>
+                                  C
+                                </Badge>
+                              )}
+                              {isOnlyPosition && (
+                                <Lock className="h-4 w-4 text-muted-foreground" data-testid={`badge-locked-${player.id}`} />
+                              )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    data-testid={`button-menu-${player.id}`}
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleMakeCaptain(player.id)}
+                                    disabled={player.id === captainId}
+                                    data-testid={`menu-item-captain-${player.id}`}
+                                  >
+                                    Make Captain
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleBenchPlayer(player)}
+                                    disabled={!canBench}
+                                    data-testid={`menu-item-bench-${player.id}`}
+                                  >
+                                    Bench Player
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleRemovePlayer(player)}
+                                    variant="destructive"
+                                    data-testid={`menu-item-remove-${player.id}`}
+                                  >
+                                    Remove from Squad
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="font-mono text-sm">{player.price}M</span>
-                            {player.id === captainId ? (
-                              <Badge variant="default" className="font-mono cursor-pointer" data-testid={`badge-captain-${player.id}`}>
-                                C
-                              </Badge>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setCaptainId(player.id)}
-                                data-testid={`button-set-captain-${player.id}`}
-                              >
-                                Set C
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => togglePlayer(player)}
-                              data-testid={`button-remove-${player.id}`}
-                            >
-                              ✕
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -327,28 +392,45 @@ export default function Squad() {
                             <Badge variant="outline" className="font-mono" data-testid="badge-bench">
                               B
                             </Badge>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => togglePlayer(player)}
-                              data-testid={`button-remove-bench-${player.id}`}
-                            >
-                              ✕
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  data-testid={`button-menu-bench-${player.id}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleMakeCaptain(player.id)}
+                                  disabled={player.id === captainId}
+                                  data-testid={`menu-item-captain-bench-${player.id}`}
+                                >
+                                  Make Captain
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setBenchPlayerId(null);
+                                  }}
+                                  data-testid={`menu-item-bring-back-${player.id}`}
+                                >
+                                  Bring back to starting XI
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleRemovePlayer(player)}
+                                  variant="destructive"
+                                  data-testid={`menu-item-remove-bench-${player.id}`}
+                                >
+                                  Remove from Squad
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
-                      ))}
-                      {selectedPlayers.filter(p => p.id !== benchPlayerId && p.id !== captainId).slice(0, BENCH_SIZE).map((player) => (
-                        <Button
-                          key={player.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setBenchPlayerId(player.id)}
-                          className="w-full justify-start"
-                          data-testid={`button-set-bench-${player.id}`}
-                        >
-                          Move {player.name} to bench
-                        </Button>
                       ))}
                     </div>
                   </div>

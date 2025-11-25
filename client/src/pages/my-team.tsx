@@ -142,6 +142,10 @@ export default function MyTeam() {
     mutationFn: async (newCaptainId: string) => {
       await apiRequest("PATCH", "/api/team/captain", { playerId: newCaptainId });
     },
+    onMutate: async (newCaptainId: string) => {
+      // Optimistically update the UI
+      setCaptainId(newCaptainId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/team/players"] });
       toast({

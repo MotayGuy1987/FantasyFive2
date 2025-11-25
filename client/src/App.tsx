@@ -15,27 +15,19 @@ import Leagues from "@/pages/leagues";
 import Admin from "@/pages/admin";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/squad" component={Squad} />
-          <Route path="/transfers" component={Transfers} />
-          <Route path="/leagues" component={Leagues} />
-          <Route path="/admin" component={Admin} />
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/squad" component={Squad} />
+      <Route path="/transfers" component={Transfers} />
+      <Route path="/leagues" component={Leagues} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const style = {
@@ -43,26 +35,43 @@ function App() {
     "--sidebar-width-icon": "3rem",
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
+          </header>
+          <main className="flex-1 overflow-auto">
+            <Router />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {isLoading || !isAuthenticated ? (
-          <Router />
-        ) : (
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                </header>
-                <main className="flex-1 overflow-auto">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
-        )}
+        <AppContent />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

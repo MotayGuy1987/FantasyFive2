@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { validateSquad } from "@/lib/positionValidation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PositionBadge } from "@/components/position-badge";
-import { Star, Users, TrendingUp, Search, Check } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Star, Users, TrendingUp, Search, Check, AlertTriangle } from "lucide-react";
 import type { Team, Player, TeamPlayer } from "@shared/schema";
 
 const BUDGET = 50.0;
@@ -111,10 +113,14 @@ export default function Squad() {
 
   const totalSpent = selectedPlayers.reduce((sum, p) => sum + parseFloat(p.price), 0);
   const remaining = BUDGET - totalSpent;
+  
+  const squadValidation = validateSquad(selectedPlayers, benchPlayerId);
   const isValidSquad = selectedPlayers.length === (SQUAD_SIZE + BENCH_SIZE) && 
                        captainId !== null && 
                        benchPlayerId !== null &&
-                       teamName.trim().length > 0;
+                       teamName.trim().length > 0 &&
+                       squadValidation.isValid &&
+                       remaining >= 0;
 
   const togglePlayer = (player: Player) => {
     if (selectedPlayers.find(p => p.id === player.id)) {
@@ -220,6 +226,40 @@ export default function Squad() {
                 </p>
               ) : (
                 <>
+                  {squadValidation.errors.length > 0 && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        <ul className="list-disc list-inside space-y-1">
+                          {squadValidation.errors.map((error, i) => (
+                            <li key={i} className="text-sm">{error}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground mb-1">DEF</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.DEF >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts.DEF}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground mb-1">MID</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.MID >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts.MID}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground mb-1">FWD</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.FWD >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts.FWD}
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Starting XI ({starterPlayers.length}/{SQUAD_SIZE})</h3>
                     <div className="space-y-2">

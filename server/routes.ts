@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
+import { validateTransfer as validateTransferPosition } from "./positionValidation";
 import { z } from "zod";
 
 const createTeamSchema = z.object({
@@ -289,8 +290,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid player" });
       }
 
-      if (playerIn.position !== playerOut.player.position) {
-        return res.status(400).json({ message: "Players must be same position" });
+      // Validate position requirements
+      const transferValidation = validateTransferPosition(
+        playerOut.player.position,
+        playerIn.position,
+        teamPlayers.map(tp => ({
+          id: tp.playerId,
+          position: tp.player.position,
+          isOnBench: tp.isOnBench,
+        }))
+      );
+
+      if (!transferValidation.canTransfer) {
+        return res.status(400).json({ message: transferValidation.reason || "Invalid transfer" });
       }
 
       const transfersThisGameweek = await storage.getTransfersByGameweek(team.id, gameweekId);

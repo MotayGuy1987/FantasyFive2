@@ -4,13 +4,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { validateTransfer } from "@/lib/positionValidation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { PositionBadge } from "@/components/position-badge";
-import { Repeat, Star, Search, AlertTriangle } from "lucide-react";
+import { Repeat, Star, Search, AlertTriangle, Lock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Team, Player, TeamPlayer, Gameweek } from "@shared/schema";
 
@@ -119,6 +120,7 @@ export default function Transfers() {
 
   const currentPlayerIds = teamPlayers.map(tp => tp.player.id);
   const availablePlayers = allPlayers?.filter(p => !currentPlayerIds.includes(p.id)) || [];
+  const teamPlayersPlayers = teamPlayers.map(tp => tp.player);
   
   const filteredAvailable = availablePlayers.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -127,7 +129,9 @@ export default function Transfers() {
 
   const freeTransfers = team.freeTransfers || 0;
   const transferCost = freeTransfers > 0 ? 0 : -2;
-  const canMakeTransfer = selectedOut && selectedIn && currentGameweek;
+  
+  const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut, selectedIn, teamPlayersPlayers, null) : null;
+  const canMakeTransfer = selectedOut && selectedIn && currentGameweek && (transferValidation?.canTransfer ?? true);
 
   const handleConfirmTransfer = () => {
     if (!canMakeTransfer) return;
@@ -170,6 +174,15 @@ export default function Transfers() {
         </Alert>
       )}
 
+      {transferValidation && !transferValidation.canTransfer && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {transferValidation.reason}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -181,14 +194,18 @@ export default function Transfers() {
           <CardContent className="space-y-2">
             {teamPlayers.map((tp) => {
               const isSelectedOut = selectedOut?.id === tp.player.id;
+              // Check if this player's position is locked (only one of that position in starters)
+              const samePositionCount = teamPlayersPlayers.filter(p => p.position === tp.player.position && p.id !== (tp.isOnBench ? '...' : tp.playerId)).length;
+              const isLocked = samePositionCount === 1 && !tp.isOnBench;
               
               return (
                 <div
                   key={tp.id}
-                  className={`flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
-                    isSelectedOut ? 'bg-destructive/10 border-destructive' : 'hover-elevate'
-                  }`}
+                  className={`flex items-center justify-between p-3 rounded-md border transition-colors ${
+                    isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${isSelectedOut ? 'bg-destructive/10 border-destructive' : 'hover-elevate'}`}
                   onClick={() => {
+                    if (isLocked) return;
                     if (isSelectedOut) {
                       setSelectedOut(null);
                       setSelectedIn(null);
@@ -211,6 +228,7 @@ export default function Transfers() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {tp.isCaptain && <Badge className="font-mono">C</Badge>}
                     {tp.isOnBench && <Badge variant="outline" className="font-mono">B</Badge>}
+                    {isLocked && <Lock className="h-4 w-4 text-muted-foreground" data-testid="badge-locked" />}
                     <span className="font-mono font-medium">{tp.player.price}M</span>
                     {isSelectedOut && (
                       <Badge variant="destructive" data-testid="badge-selected-out">Out</Badge>

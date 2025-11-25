@@ -47,6 +47,7 @@ export interface IStorage {
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayerForm(playerId: string, isInForm: boolean): Promise<void>;
   
+  getAllTeams(): Promise<Team[]>;
   getTeamByUserId(userId: string): Promise<Team | undefined>;
   createTeam(team: InsertTeam): Promise<Team>;
   updateTeam(teamId: string, data: Partial<Team>): Promise<Team>;
@@ -138,6 +139,10 @@ export class DatabaseStorage implements IStorage {
 
   async updatePlayerForm(playerId: string, isInForm: boolean): Promise<void> {
     await db.update(players).set({ isInForm }).where(eq(players.id, playerId));
+  }
+
+  async getAllTeams(): Promise<Team[]> {
+    return await db.select().from(teams);
   }
 
   async getTeamByUserId(userId: string): Promise<Team | undefined> {

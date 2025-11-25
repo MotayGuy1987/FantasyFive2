@@ -604,23 +604,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updatePlayerForm(perf.playerId, isInForm);
       }
 
-      const allTeams = await storage.getAllPlayers();
-      const teams: any = {};
+      const allTeams = await storage.getAllTeams();
 
-      for (const player of allTeams) {
-        const team = await storage.getTeamByUserId(player.id);
-        if (team) {
-          teams[team.id] = team;
-        }
-      }
-
-      for (const [teamId, team] of Object.entries(teams) as any) {
-        const teamPlayers = await storage.getTeamPlayers(teamId);
+      for (const team of allTeams) {
+        const teamPlayers = await storage.getTeamPlayers(team.id);
         let totalPoints = 0;
         let benchBoostUsed = false;
         let tripleCaptainUsed = false;
 
-        const chips = await storage.getChipsUsedByTeam(teamId);
+        const chips = await storage.getChipsUsedByTeam(team.id);
         const gameweekChips = chips.filter((c) => c.gameweekId === gameweekId);
         
         benchBoostUsed = gameweekChips.some((c) => c.chipType === "BENCH_BOOST");
@@ -642,20 +634,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         await storage.upsertGameweekScore({
-          teamId,
+          teamId: team.id,
           gameweekId,
           points: totalPoints,
           benchBoostUsed,
           tripleCaptainUsed,
         });
 
-        const transfers = await storage.getTransfersByGameweek(teamId, gameweekId);
+        const transfers = await storage.getTransfersByGameweek(team.id, gameweekId);
         const transferCost = transfers.reduce((sum, t) => sum + (t.cost || 0), 0);
         
         const newTotalPoints = (team.totalPoints || 0) + totalPoints + transferCost;
         const newFreeTransfers = Math.min((team.freeTransfers || 0) + 1, 5);
         
-        await storage.updateTeam(teamId, {
+        await storage.updateTeam(team.id, {
           totalPoints: newTotalPoints,
           freeTransfers: newFreeTransfers,
         });

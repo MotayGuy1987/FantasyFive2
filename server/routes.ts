@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { validateTransfer as validateTransferPosition } from "./positionValidation";
+import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 
 const createTeamSchema = z.object({
@@ -314,7 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate position requirements
-      const transferValidation = validateTransferPosition(
+      const transferValidation = validateTransfer(
         playerOut.player.position,
         playerIn.position,
         teamPlayers.map(tp => ({
@@ -331,14 +331,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transfersThisGameweek = await storage.getTransfersByGameweek(team.id, gameweekId);
       const freeTransfers = team.freeTransfers || 0;
       const cost = transfersThisGameweek.length >= freeTransfers ? -2 : 0;
-
-      await storage.createTransfer({
-        teamId: team.id,
-        gameweekId,
-        playerInId,
-        playerOutId,
-        cost,
-      });
 
       await storage.deleteTeamPlayers(team.id);
       
@@ -361,6 +353,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
+
+      await storage.createTransfer({
+        teamId: team.id,
+        gameweekId,
+        playerInId,
+        playerOutId,
+        cost,
+      });
 
       if (cost < 0) {
         await storage.updateTeam(team.id, { 

@@ -221,11 +221,17 @@ export default function MyTeam() {
     if (!aIsBench && bIsBench) return -1;
     
     // Otherwise sort by price descending (highest first)
-    return (b.price || 0) - (a.price || 0);
+    const aPrice = parseFloat(String(a.price)) || 0;
+    const bPrice = parseFloat(String(b.price)) || 0;
+    return bPrice - aPrice;
   });
 
   // Sort available players by price descending
-  const sortedAvailable = [...filteredAvailable].sort((a, b) => (b.price || 0) - (a.price || 0));
+  const sortedAvailable = [...filteredAvailable].sort((a, b) => {
+    const aPrice = parseFloat(String(a.price)) || 0;
+    const bPrice = parseFloat(String(b.price)) || 0;
+    return bPrice - aPrice;
+  });
 
   const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut.position, selectedIn.position, teamPlayersData) : null;
   const canMakeTransfer = selectedOut && selectedIn && currentGameweek && (transferValidation?.canTransfer ?? true);
@@ -267,7 +273,11 @@ export default function MyTeam() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  {sortedAvailable.map((player) => {
+                  {[...players].sort((a, b) => {
+                    const aPrice = parseFloat(String(a.price)) || 0;
+                    const bPrice = parseFloat(String(b.price)) || 0;
+                    return bPrice - aPrice;
+                  }).map((player) => {
                     const isSelected = selectedPlayers.some(p => p.id === player.id);
                     const isBench = benchPlayerId === player.id;
                     return (

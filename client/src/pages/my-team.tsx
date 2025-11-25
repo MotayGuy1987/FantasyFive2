@@ -138,6 +138,30 @@ export default function MyTeam() {
     }
   }, [existingTeamPlayers, team]);
 
+  // Auto-select bench player when 6 players are selected
+  useEffect(() => {
+    if (selectedPlayers.length === 6 && !benchPlayerId) {
+      // Check which players are locked (only one of their position in starters)
+      const validation = validateSquad(selectedPlayers, null);
+      const lockedPlayerIds = validation.lockedPlayers;
+      
+      // Find the first non-locked, non-captain player to be bench
+      const benchCandidate = selectedPlayers.find(p => 
+        p.id !== captainId && !lockedPlayerIds.has(p.id)
+      );
+      
+      if (benchCandidate) {
+        setBenchPlayerId(benchCandidate.id);
+      } else {
+        // If all non-captain players are locked, just pick the last selected (non-captain)
+        const nonCaptainPlayers = selectedPlayers.filter(p => p.id !== captainId);
+        if (nonCaptainPlayers.length > 0) {
+          setBenchPlayerId(nonCaptainPlayers[nonCaptainPlayers.length - 1].id);
+        }
+      }
+    }
+  }, [selectedPlayers.length, selectedPlayers]);
+
   const updateCaptainMutation = useMutation({
     mutationFn: async (newCaptainId: string) => {
       await apiRequest("PATCH", "/api/team/captain", { playerId: newCaptainId });
@@ -807,47 +831,70 @@ export default function MyTeam() {
           </DialogHeader>
           {bencedPlayerToSwap && (
             <div className="space-y-4">
-              {selectedPlayers
-                .filter(p => p.id !== bencedPlayerToSwap.id)
-                .map((player) => {
-                  const isBench = player.id === benchPlayerId;
-                  const canSwap = player.position === bencedPlayerToSwap.position;
-                  
-                  return (
-                    <Button
-                      key={player.id}
-                      onClick={() => {
-                        if (benchPlayerId === bencedPlayerToSwap.id) {
-                          // Bringing bench player to starting XI
-                          setBenchPlayerId(player.id);
-                        } else {
-                          // Moving starter to bench
-                          setBenchPlayerId(bencedPlayerToSwap.id);
-                        }
-                        setSwapDialogOpen(false);
-                      }}
-                      variant={isBench ? "default" : "outline"}
-                      disabled={!canSwap}
-                      className="w-full justify-between"
-                      data-testid={`button-swap-player-${player.id}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <PositionBadge position={player.position} />
-                        {player.name}
-                        {isBench && <Badge variant="outline" className="text-xs">Current Bench</Badge>}
-                      </div>
-                      <span className="text-xs">£{player.price}M</span>
-                    </Button>
-                  );
-                })}
-              {selectedPlayers.some(p => p.id !== bencedPlayerToSwap.id && p.position !== bencedPlayerToSwap.position) && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Can only swap players with the same position ({bencedPlayerToSwap.position})
-                  </AlertDescription>
-                </Alert>
-              )}
+              {(() => {
+                // Check which players are locked (only one of their position in starters)
+                const tempBenchId = benchPlayerId === bencedPlayerToSwap.id ? null : bencedPlayerToSwap.id;
+                const validation = validateSquad(selectedPlayers, tempBenchId);
+                const lockedPlayerIds = validation.lockedPlayers;
+                
+                return (
+                  <>
+                    {selectedPlayers
+                      .filter(p => p.id !== bencedPlayerToSwap.id)
+                      .map((player) => {
+                        const isBench = player.id === benchPlayerId;
+                        const isSwappingPlayerToBench = benchPlayerId === bencedPlayerToSwap.id ? false : true;
+                        const positionMatches = player.position === bencedPlayerToSwap.position;
+                        const isLocked = lockedPlayerIds.has(player.id);
+                        
+                        // Can't swap if positions don't match, or if trying to move locked player to bench
+                        const canSwap = positionMatches && !(isSwappingPlayerToBench && isLocked);
+                        const disabledReason = !positionMatches 
+                          ? "Different position" 
+                          : (isSwappingPlayerToBench && isLocked)
+                          ? "Can't bench - only one of this position"
+                          : null;
+                        
+                        return (
+                          <Button
+                            key={player.id}
+                            onClick={() => {
+                              if (benchPlayerId === bencedPlayerToSwap.id) {
+                                // Bringing bench player to starting XI
+                                setBenchPlayerId(player.id);
+                              } else {
+                                // Moving starter to bench
+                                setBenchPlayerId(bencedPlayerToSwap.id);
+                              }
+                              setSwapDialogOpen(false);
+                            }}
+                            variant={isBench ? "default" : "outline"}
+                            disabled={!canSwap}
+                            title={disabledReason || ""}
+                            className="w-full justify-between"
+                            data-testid={`button-swap-player-${player.id}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <PositionBadge position={player.position} />
+                              {player.name}
+                              {isBench && <Badge variant="outline" className="text-xs">Current Bench</Badge>}
+                              {isSwappingPlayerToBench && isLocked && <Badge variant="destructive" className="text-xs">Locked</Badge>}
+                            </div>
+                            <span className="text-xs">£{player.price}M</span>
+                          </Button>
+                        );
+                      })}
+                    {selectedPlayers.some(p => p.id !== bencedPlayerToSwap.id && p.position !== bencedPlayerToSwap.position) && (
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Can only swap players with the same position ({bencedPlayerToSwap.position})
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </DialogContent>

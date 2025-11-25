@@ -37,6 +37,7 @@ interface PerformanceData {
   redCards: number;
   straightRed: boolean;
   isMotm: boolean;
+  daysPlayed: number;
 }
 
 export default function Admin() {
@@ -151,6 +152,37 @@ export default function Admin() {
     },
   });
 
+  const endGameweekMutation = useMutation({
+    mutationFn: async (gameweekId: string) => {
+      await apiRequest("POST", "/api/admin/end-gameweek", { gameweekId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gameweeks"] });
+      toast({
+        title: "Success",
+        description: "Gameweek ended and scores are confirmed!",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (players && Array.isArray(players) && selectedGameweek) {
       const initialPerformances: Record<string, PerformanceData> = {};
@@ -163,6 +195,7 @@ export default function Admin() {
           redCards: 0,
           straightRed: false,
           isMotm: false,
+          daysPlayed: 0,
         };
       });
       setPerformances(initialPerformances);
@@ -302,6 +335,7 @@ export default function Admin() {
                     <TableHead className="text-center">Red</TableHead>
                     <TableHead className="text-center">Straight Red</TableHead>
                     <TableHead className="text-center">MOTM</TableHead>
+                    <TableHead className="text-center">Days Played</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -367,12 +401,22 @@ export default function Admin() {
                           data-testid={`checkbox-motm-${player.id}`}
                         />
                       </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={performances[player.id]?.daysPlayed || 0}
+                          onChange={(e) => updatePerformance(player.id, "daysPlayed", parseInt(e.target.value) || 0)}
+                          className="w-20 text-center"
+                          data-testid={`input-days-${player.id}`}
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
               <Button
                 onClick={handleSubmitPerformances}
                 disabled={submitPerformancesMutation.isPending}
@@ -381,6 +425,20 @@ export default function Admin() {
                 data-testid="button-submit-performances"
               >
                 {submitPerformancesMutation.isPending ? "Submitting..." : "Submit Performances"}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedGameweek) {
+                    endGameweekMutation.mutate(selectedGameweek);
+                  }
+                }}
+                disabled={endGameweekMutation.isPending || !selectedGameweek}
+                className="w-full"
+                size="lg"
+                variant="secondary"
+                data-testid="button-end-gameweek"
+              >
+                {endGameweekMutation.isPending ? "Ending..." : "End Gameweek"}
               </Button>
             </div>
           </CardContent>

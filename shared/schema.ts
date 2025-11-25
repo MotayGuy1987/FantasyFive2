@@ -84,6 +84,7 @@ export const playerPerformances = pgTable("player_performances", {
   redCards: integer("red_cards").default(0),
   straightRed: boolean("straight_red").default(false),
   isMotm: boolean("is_motm").default(false),
+  daysPlayed: integer("days_played").default(0),
   points: integer("points").default(0),
 }, (table) => [
   unique().on(table.playerId, table.gameweekId),

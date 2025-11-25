@@ -43,6 +43,7 @@ const submitPerformancesSchema = z.object({
     redCards: z.number().int().min(0),
     straightRed: z.boolean(),
     isMotm: z.boolean(),
+    daysPlayed: z.number().int().min(0),
   })),
 });
 
@@ -58,6 +59,7 @@ function calculatePlayerPoints(
   redCards: number,
   straightRed: boolean,
   isMotm: boolean,
+  daysPlayed: number,
   position: string
 ): number {
   let points = 0;
@@ -80,6 +82,10 @@ function calculatePlayerPoints(
 
   if (isMotm) {
     points += 3;
+  }
+
+  if (daysPlayed >= 4) {
+    points += 2;
   }
 
   return points;
@@ -596,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           perf.redCards,
           perf.straightRed,
           perf.isMotm,
+          perf.daysPlayed,
           player.position
         );
 
@@ -608,6 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           redCards: perf.redCards,
           straightRed: perf.straightRed,
           isMotm: perf.isMotm,
+          daysPlayed: perf.daysPlayed,
           points,
         });
 
@@ -615,9 +623,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updatePlayerForm(perf.playerId, isInForm);
       }
 
+      // Auto-substitution: replace 0-point starters with bench player if bench player has >0 points
       const allTeams = await storage.getAllTeams();
 
       for (const team of allTeams) {
+        let teamPlayers = await storage.getTeamPlayers(team.id);
+        
+        const starters = teamPlayers.filter((tp) => !tp.isOnBench);
+        const bench = teamPlayers.filter((tp) => tp.isOnBench);
+        
+        for (const starter of starters) {
+          const starterPerf = await storage.getPlayerPerformance(starter.playerId, gameweekId);
+          const starterPoints = starterPerf?.points || 0;
+          
+          if (starterPoints === 0 && bench.length > 0) {
+            const benchPlayer = bench[0];
+            const benchPerf = await storage.getPlayerPerformance(benchPlayer.playerId, gameweekId);
+            const benchPoints = benchPerf?.points || 0;
+            
+            if (benchPoints > 0) {
+              // Swap starter and bench
+              await storage.updateTeamPlayer(starter.id, { isOnBench: true });
+              await storage.updateTeamPlayer(benchPlayer.id, { isOnBench: false });
+            }
+          }
+        }
+      }
+
+      const allTeamsUpdated = await storage.getAllTeams();
+
+      for (const team of allTeamsUpdated) {
         const teamPlayers = await storage.getTeamPlayers(team.id);
         let totalPoints = 0;
         let benchBoostUsed = false;
@@ -670,6 +705,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting performances:", error);
       res.status(500).json({ message: "Failed to submit performances" });
+    }
+  });
+
+  app.post("/api/admin/end-gameweek", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { gameweekId } = req.body;
+      if (!gameweekId) {
+        return res.status(400).json({ message: "gameweekId is required" });
+      }
+
+      const gameweek = await storage.getGameweek(gameweekId);
+      if (!gameweek) {
+        return res.status(404).json({ message: "Gameweek not found" });
+      }
+
+      await storage.updateGameweek(gameweekId, { isCompleted: true });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error ending gameweek:", error);
+      res.status(500).json({ message: "Failed to end gameweek" });
     }
   });
 

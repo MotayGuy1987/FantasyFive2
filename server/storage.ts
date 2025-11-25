@@ -54,12 +54,14 @@ export interface IStorage {
   
   getTeamPlayers(teamId: string): Promise<(TeamPlayer & { player: Player })[]>;
   createTeamPlayer(teamPlayer: InsertTeamPlayer): Promise<TeamPlayer>;
+  updateTeamPlayer(teamPlayerId: string, data: Partial<TeamPlayer>): Promise<TeamPlayer>;
   deleteTeamPlayers(teamId: string): Promise<void>;
   
   getAllGameweeks(): Promise<Gameweek[]>;
   getCurrentGameweek(): Promise<Gameweek | undefined>;
   getGameweek(id: string): Promise<Gameweek | undefined>;
   createGameweek(gameweek: InsertGameweek): Promise<Gameweek>;
+  updateGameweek(gameweekId: string, data: Partial<Gameweek>): Promise<Gameweek>;
   setActiveGameweek(gameweekId: string): Promise<void>;
   
   getPlayerPerformance(playerId: string, gameweekId: string): Promise<PlayerPerformance | undefined>;
@@ -183,6 +185,15 @@ export class DatabaseStorage implements IStorage {
     return teamPlayer;
   }
 
+  async updateTeamPlayer(teamPlayerId: string, data: Partial<TeamPlayer>): Promise<TeamPlayer> {
+    const [teamPlayer] = await db
+      .update(teamPlayers)
+      .set(data)
+      .where(eq(teamPlayers.id, teamPlayerId))
+      .returning();
+    return teamPlayer;
+  }
+
   async deleteTeamPlayers(teamId: string): Promise<void> {
     await db.delete(teamPlayers).where(eq(teamPlayers.teamId, teamId));
   }
@@ -207,6 +218,15 @@ export class DatabaseStorage implements IStorage {
 
   async createGameweek(gameweekData: InsertGameweek): Promise<Gameweek> {
     const [gameweek] = await db.insert(gameweeks).values(gameweekData).returning();
+    return gameweek;
+  }
+
+  async updateGameweek(gameweekId: string, data: Partial<Gameweek>): Promise<Gameweek> {
+    const [gameweek] = await db
+      .update(gameweeks)
+      .set(data)
+      .where(eq(gameweeks.id, gameweekId))
+      .returning();
     return gameweek;
   }
 

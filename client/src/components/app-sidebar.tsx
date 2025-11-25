@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 const menuItems = [
@@ -42,11 +44,21 @@ const adminMenuItem = {
 };
 
 export function AppSidebar() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user } = useAuth();
   const userData = user as User | undefined;
   
   const isAdmin = userData?.email === "admin@admin.com";
+  
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <Sidebar>
@@ -111,11 +123,11 @@ export function AppSidebar() {
         )}
         <Button 
           variant="outline" 
-          className="w-full mt-2" 
-          asChild
+          className="w-full mt-2"
+          onClick={handleLogout}
           data-testid="button-logout"
         >
-          <a href="/api/logout">Log Out</a>
+          Log Out
         </Button>
       </SidebarFooter>
     </Sidebar>

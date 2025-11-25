@@ -530,7 +530,11 @@ export default function MyTeam() {
                 return (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-3 rounded-md border"
+                    className={`flex items-center justify-between p-3 rounded-md border ${
+                      isBench 
+                        ? 'bg-blue-500/10 border-blue-500/30 dark:bg-blue-500/15' 
+                        : ''
+                    }`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <PositionBadge position={player.position} />
@@ -538,8 +542,10 @@ export default function MyTeam() {
                         <p className="font-medium truncate">{player.name}</p>
                         <p className="text-xs text-muted-foreground">£{player.price}M</p>
                       </div>
-                      {isBench && <Badge variant="secondary">Bench</Badge>}
-                      {isCaptain && <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"><Star className="h-3 w-3 mr-1" />Captain</Badge>}
+                      <div className="flex gap-2 items-center">
+                        {isBench && <Badge className="bg-blue-600 text-white dark:bg-blue-500">BENCH</Badge>}
+                        {isCaptain && <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"><Star className="h-3 w-3 mr-1" />Captain</Badge>}
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

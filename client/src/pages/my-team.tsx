@@ -470,7 +470,7 @@ export default function MyTeam() {
             </Card>
           )}
 
-          {currentGameweek && gameweekScore && playerPerformances && (
+          {existingTeamPlayers && existingTeamPlayers.length > 0 && currentGameweek && gameweekScore && playerPerformances && (
             <Card>
               <CardHeader>
                 <CardTitle>Gameweek {currentGameweek.number} Scores</CardTitle>

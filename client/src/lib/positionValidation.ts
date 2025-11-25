@@ -1,9 +1,9 @@
 import type { Player } from "@shared/schema";
 
 export const POSITIONS = {
-  DEF: "DEF",
-  MID: "MID",
-  FWD: "FWD",
+  DEF: "Defender",
+  MID: "Midfielder",
+  FWD: "Forward",
 } as const;
 
 export type Position = typeof POSITIONS[keyof typeof POSITIONS];

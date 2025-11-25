@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { validateSquad } from "@/lib/positionValidation";
+import { validateSquad, POSITIONS } from "@/lib/positionValidation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +114,7 @@ export default function Squad() {
   const totalSpent = selectedPlayers.reduce((sum, p) => sum + parseFloat(p.price), 0);
   const remaining = BUDGET - totalSpent;
   
-  const squadValidation = validateSquad(selectedPlayers, benchPlayerId);
+  const squadValidation = validateSquad(selectedPlayers.map(p => ({ id: p.id, position: p.position, isOnBench: p.id === benchPlayerId })), benchPlayerId);
   const isValidSquad = selectedPlayers.length === (SQUAD_SIZE + BENCH_SIZE) && 
                        captainId !== null && 
                        benchPlayerId !== null &&
@@ -242,20 +242,20 @@ export default function Squad() {
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-center">
                       <div className="text-xs text-muted-foreground mb-1">DEF</div>
-                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.DEF >= 1 ? 'text-primary' : 'text-destructive'}`}>
-                        {squadValidation.positionCounts.DEF}
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts[POSITIONS.DEF] >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts[POSITIONS.DEF]}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-muted-foreground mb-1">MID</div>
-                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.MID >= 1 ? 'text-primary' : 'text-destructive'}`}>
-                        {squadValidation.positionCounts.MID}
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts[POSITIONS.MID] >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts[POSITIONS.MID]}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-muted-foreground mb-1">FWD</div>
-                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.FWD >= 1 ? 'text-primary' : 'text-destructive'}`}>
-                        {squadValidation.positionCounts.FWD}
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts[POSITIONS.FWD] >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                        {squadValidation.positionCounts[POSITIONS.FWD]}
                       </div>
                     </div>
                   </div>
@@ -358,7 +358,7 @@ export default function Squad() {
               <Button
                 className="w-full"
                 onClick={handleSaveSquad}
-                disabled={!isValidSquad || remaining < 0 || saveTeamMutation.isPending}
+                disabled={!isValidSquad || saveTeamMutation.isPending}
                 data-testid="button-save-squad"
               >
                 {saveTeamMutation.isPending ? "Saving..." : "Save Squad"}
@@ -401,33 +401,33 @@ export default function Squad() {
                 return (
                   <div
                     key={player.id}
-                    className={`flex items-center justify-between p-3 rounded-md border transition-colors ${
-                      isSelected ? 'bg-primary/10 border-primary' : 'hover-elevate'
+                    className={`flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary/10 border-primary'
+                        : canAfford
+                        ? 'hover-elevate'
+                        : 'opacity-50 cursor-not-allowed'
                     }`}
-                    data-testid={`player-card-${player.name.toLowerCase().replace(' ', '-')}`}
+                    onClick={() => canAfford && togglePlayer(player)}
+                    data-testid={`available-player-${player.name.toLowerCase().replace(' ', '-')}`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <PositionBadge position={player.position} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium truncate">{player.name}</span>
-                          {player.isInForm && (
-                            <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" data-testid={`star-${player.id}`} />
-                          )}
+                          {player.isInForm && <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" />}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="font-mono font-medium">{player.price}M</span>
-                      <Button
-                        size="sm"
-                        variant={isSelected ? "default" : "outline"}
-                        onClick={() => togglePlayer(player)}
-                        disabled={!isSelected && (!canAfford || selectedPlayers.length >= SQUAD_SIZE + BENCH_SIZE)}
-                        data-testid={`button-toggle-${player.id}`}
-                      >
-                        {isSelected ? <Check className="h-4 w-4" /> : "Add"}
-                      </Button>
+                      {isSelected && (
+                        <Badge variant="default" data-testid={`badge-selected-${player.id}`}>
+                          <Check className="h-3 w-3 mr-1" />
+                          Added
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 );

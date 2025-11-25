@@ -262,12 +262,12 @@ export default function MyTeam() {
         </TabsList>
 
         <TabsContent value="squad" className="space-y-6">
-          {selectedPlayers.length === 0 && players && (
+          {selectedPlayers.length < 6 && players && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Build Your Squad
+                  Build Your Squad ({selectedPlayers.length}/6)
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £50M)</p>
               </CardHeader>

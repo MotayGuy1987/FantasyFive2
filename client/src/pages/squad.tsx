@@ -35,6 +35,25 @@ const BUDGET = 50.0;
 const SQUAD_SIZE = 5;
 const BENCH_SIZE = 1;
 
+// Point calculation system (must match server calculation)
+const POINT_MULTIPLIERS = {
+  Defender: { goal: 6, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
+  Midfielder: { goal: 5, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
+  Forward: { goal: 5, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
+};
+
+function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Record<string, number> {
+  const multipliers = POINT_MULTIPLIERS[position as keyof typeof POINT_MULTIPLIERS] || POINT_MULTIPLIERS.Midfielder;
+  
+  return {
+    goals: (perf.goals || 0) * multipliers.goal,
+    assists: (perf.assists || 0) * multipliers.assist,
+    yellowCards: (perf.yellowCards || 0) * multipliers.yellowCard,
+    redCards: (perf.redCards || 0) * multipliers.redCard,
+    motm: (perf.isMotm ? 1 : 0) * multipliers.motm,
+  };
+}
+
 export default function Squad() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
@@ -46,6 +65,8 @@ export default function Squad() {
   const [positionFilter, setPositionFilter] = useState("All");
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [bencedPlayerToSwap, setBencedPlayerToSwap] = useState<Player | null>(null);
+  const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
+  const [selectedPlayerPerf, setSelectedPlayerPerf] = useState<{ player: Player; perf: PlayerPerformance } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -282,6 +303,96 @@ export default function Squad() {
         </Card>
       </div>
 
+      <Dialog open={performanceModalOpen} onOpenChange={setPerformanceModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedPlayerPerf?.player.name} - Performance Breakdown</DialogTitle>
+            <DialogDescription>
+              Gameweek {currentGameweek?.number} Points Calculation
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPlayerPerf && (
+            <div className="space-y-4">
+              <div className="text-center border-b pb-4">
+                <div className="text-xs text-muted-foreground mb-1">Total Points</div>
+                <div className="text-3xl font-bold text-primary">{selectedPlayerPerf.perf.points} pts</div>
+              </div>
+              <div className="space-y-3">
+                {(() => {
+                  const breakdown = calculatePointsBreakdown(selectedPlayerPerf.perf, selectedPlayerPerf.player.position);
+                  const position = selectedPlayerPerf.player.position;
+                  const multipliers = POINT_MULTIPLIERS[position as keyof typeof POINT_MULTIPLIERS] || POINT_MULTIPLIERS.Midfielder;
+                  
+                  return (
+                    <>
+                      {selectedPlayerPerf.perf.goals > 0 && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Goals</div>
+                            <div className="text-xs text-muted-foreground">{selectedPlayerPerf.perf.goals} × {multipliers.goal} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-primary">+{breakdown.goals}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.assists > 0 && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Assists</div>
+                            <div className="text-xs text-muted-foreground">{selectedPlayerPerf.perf.assists} × {multipliers.assist} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-primary">+{breakdown.assists}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.yellowCards > 0 && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Yellow Cards</div>
+                            <div className="text-xs text-muted-foreground">{selectedPlayerPerf.perf.yellowCards} × {multipliers.yellowCard} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-destructive">{breakdown.yellowCards}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.redCards > 0 && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Red Cards</div>
+                            <div className="text-xs text-muted-foreground">{selectedPlayerPerf.perf.redCards} × {multipliers.redCard} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-destructive">{breakdown.redCards}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.straightRed && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Straight Red</div>
+                            <div className="text-xs text-muted-foreground">{multipliers.straightRed} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-destructive">{breakdown.redCards}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.isMotm && (
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                          <div>
+                            <div className="text-sm font-medium">Man of the Match</div>
+                            <div className="text-xs text-muted-foreground">×{multipliers.motm} pts</div>
+                          </div>
+                          <div className="font-mono font-bold text-primary">+{breakdown.motm}</div>
+                        </div>
+                      )}
+                      {selectedPlayerPerf.perf.goals === 0 && selectedPlayerPerf.perf.assists === 0 && selectedPlayerPerf.perf.yellowCards === 0 && selectedPlayerPerf.perf.redCards === 0 && !selectedPlayerPerf.perf.straightRed && !selectedPlayerPerf.perf.isMotm && (
+                        <div className="text-center text-sm text-muted-foreground py-4">
+                          No recorded statistics
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -355,7 +466,18 @@ export default function Squad() {
                       const perf = playerPerformances.find(p => p.playerId === player.id);
                       const isBenched = player.id === benchPlayerId;
                       return (
-                        <div key={player.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                        <Button
+                          key={player.id}
+                          onClick={() => {
+                            if (perf) {
+                              setSelectedPlayerPerf({ player, perf });
+                              setPerformanceModalOpen(true);
+                            }
+                          }}
+                          variant="outline"
+                          className="w-full justify-between p-2 h-auto"
+                          data-testid={`button-player-perf-${player.id}`}
+                        >
                           <div className="flex items-center gap-2 flex-1">
                             <PositionBadge position={player.position} />
                             <span className="font-medium text-sm">{player.name}</span>
@@ -364,7 +486,7 @@ export default function Squad() {
                           <div className="font-mono text-sm font-bold text-primary">
                             {perf?.points || 0} pts
                           </div>
-                        </div>
+                        </Button>
                       );
                     })}
                   </div>

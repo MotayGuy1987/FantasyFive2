@@ -287,7 +287,9 @@ export default function MyTeam() {
     });
   };
 
-  const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId;
+  const squadValidation = validateSquad(selectedPlayers, benchPlayerId);
+  const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId && squadValidation.isValid;
+  const totalBudgetUsed = selectedPlayers.reduce((sum, p) => sum + (parseFloat(String(p.price)) || 0), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -300,19 +302,87 @@ export default function MyTeam() {
         </div>
 
         {selectedPlayers.length > 0 && (
-          <div className="space-y-2">
-            <Label htmlFor="team-name">Team Name</Label>
-            <Input
-              id="team-name"
-              placeholder="Enter your team name"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              disabled={isSquadComplete}
-              data-testid="input-team-name"
-            />
-            {isSquadComplete && (
-              <p className="text-xs text-muted-foreground">Team name is locked after squad is saved</p>
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Budget Used</div>
+                  <div className="text-2xl font-bold font-mono">£{totalBudgetUsed.toFixed(1)}M</div>
+                  <div className="text-xs text-muted-foreground mt-1">of £{BUDGET}M</div>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Squad</div>
+                  <div className="text-2xl font-bold font-mono">{selectedPlayers.length}/6</div>
+                  <div className="text-xs text-muted-foreground mt-1">Players selected</div>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Captain</div>
+                  <div className="text-2xl font-bold font-mono">{captainId ? "✓" : "–"}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{captainId ? "Selected" : "Not selected"}</div>
+                </div>
+              </Card>
+            </div>
+
+            {selectedPlayers.length > 0 && (
+              <Card className="p-4">
+                <div className="space-y-3">
+                  <div className="text-sm font-medium">Position Requirements (Starters)</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className={`p-2 rounded-md text-center ${squadValidation.positionCounts.Defender >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground">DEF</div>
+                      <div className={`text-lg font-bold ${squadValidation.positionCounts.Defender >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Defender}/1
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded-md text-center ${squadValidation.positionCounts.Midfielder >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground">MID</div>
+                      <div className={`text-lg font-bold ${squadValidation.positionCounts.Midfielder >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Midfielder}/1
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded-md text-center ${squadValidation.positionCounts.Forward >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground">FWD</div>
+                      <div className={`text-lg font-bold ${squadValidation.positionCounts.Forward >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Forward}/1
+                      </div>
+                    </div>
+                  </div>
+                  {squadValidation.errors.length > 0 && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        <ul className="list-disc list-inside space-y-1">
+                          {squadValidation.errors.map((error, idx) => (
+                            <li key={idx} className="text-xs">{error}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </Card>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="team-name">Team Name</Label>
+              <Input
+                id="team-name"
+                placeholder="Enter your team name"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                disabled={isSquadComplete}
+                data-testid="input-team-name"
+              />
+              {isSquadComplete && (
+                <p className="text-xs text-muted-foreground">Team name is locked after squad is saved</p>
+              )}
+            </div>
           </div>
         )}
       </div>

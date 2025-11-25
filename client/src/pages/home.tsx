@@ -168,7 +168,7 @@ export default function Home() {
               You haven't created a team yet. Pick your 5 starters and 1 bench player to get started!
             </p>
             <Button size="lg" asChild data-testid="button-build-squad">
-              <Link href="/squad">Build Squad</Link>
+              <Link href="/my-team">Build Squad</Link>
             </Button>
           </CardContent>
         </Card>
@@ -346,10 +346,7 @@ export default function Home() {
 
           <div className="flex gap-4 justify-center">
             <Button asChild data-testid="button-manage-squad">
-              <Link href="/squad">Manage Squad</Link>
-            </Button>
-            <Button variant="outline" asChild data-testid="button-make-transfers">
-              <Link href="/transfers">Make Transfers</Link>
+              <Link href="/my-team">Manage Squad</Link>
             </Button>
           </div>
         </>

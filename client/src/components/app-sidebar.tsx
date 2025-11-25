@@ -24,14 +24,9 @@ const menuItems = [
     icon: Home,
   },
   {
-    title: "Squad",
-    url: "/squad",
+    title: "My Team",
+    url: "/my-team",
     icon: Users,
-  },
-  {
-    title: "Transfers",
-    url: "/transfers",
-    icon: Repeat,
   },
   {
     title: "Leagues",

@@ -9,8 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
-import Squad from "@/pages/squad";
-import Transfers from "@/pages/transfers";
+import MyTeam from "@/pages/my-team";
 import Leagues from "@/pages/leagues";
 import Admin from "@/pages/admin";
 
@@ -18,8 +17,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/squad" component={Squad} />
-      <Route path="/transfers" component={Transfers} />
+      <Route path="/my-team" component={MyTeam} />
       <Route path="/leagues" component={Leagues} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />

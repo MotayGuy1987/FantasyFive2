@@ -402,10 +402,10 @@ export default function MyTeam() {
                 placeholder="Enter your team name"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
-                disabled={isSquadComplete}
+                disabled={existingTeamPlayers && existingTeamPlayers.length > 0}
                 data-testid="input-team-name"
               />
-              {isSquadComplete && (
+              {existingTeamPlayers && existingTeamPlayers.length > 0 && (
                 <p className="text-xs text-muted-foreground">Team name is locked after squad is saved</p>
               )}
             </div>

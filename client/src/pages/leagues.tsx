@@ -27,8 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Plus, LogIn, Copy, Check } from "lucide-react";
-import type { League, Team, Gameweek } from "@shared/schema";
+import { Trophy, Plus, LogIn, Copy, Check, Trash2 } from "lucide-react";
+import type { League, Team, Gameweek, User } from "@shared/schema";
 
 interface LeaderboardEntry {
   rank: number;
@@ -39,7 +39,7 @@ interface LeaderboardEntry {
 
 export default function Leagues() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [newLeagueName, setNewLeagueName] = useState("");
@@ -129,6 +129,38 @@ export default function Leagues() {
       toast({
         title: "Success",
         description: "Joined league successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLeagueMutation = useMutation({
+    mutationFn: async (leagueId: string) => {
+      await apiRequest("DELETE", `/api/leagues/${leagueId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leagues/my-leagues"] });
+      setSelectedLeagueId(null);
+      toast({
+        title: "Success",
+        description: "League deleted successfully!",
       });
     },
     onError: (error: Error) => {
@@ -339,22 +371,41 @@ export default function Leagues() {
                       <p className="font-medium truncate">{league.name}</p>
                       <p className="text-xs opacity-80 font-mono">{league.joinCode}</p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyJoinCode(league.joinCode);
-                      }}
-                      className={selectedLeagueId === league.id ? 'hover:bg-primary-foreground/10' : ''}
-                      data-testid={`button-copy-code-${league.id}`}
-                    >
-                      {copiedCode === league.joinCode ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyJoinCode(league.joinCode);
+                        }}
+                        className={selectedLeagueId === league.id ? 'hover:bg-primary-foreground/10' : ''}
+                        data-testid={`button-copy-code-${league.id}`}
+                      >
+                        {copiedCode === league.joinCode ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {league.createdBy === (user as any)?.id && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm("Are you sure you want to delete this league?")) {
+                              deleteLeagueMutation.mutate(league.id);
+                            }
+                          }}
+                          disabled={deleteLeagueMutation.isPending}
+                          className={selectedLeagueId === league.id ? 'hover:bg-destructive/10' : 'hover:text-destructive'}
+                          data-testid={`button-delete-league-${league.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   </div>
                 </div>
               ))}

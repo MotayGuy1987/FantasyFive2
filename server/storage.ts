@@ -40,6 +40,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserTeamName(userId: string, teamName: string): Promise<User | undefined>;
   
   getAllPlayers(): Promise<Player[]>;
   getPlayer(id: string): Promise<Player | undefined>;
@@ -108,6 +109,15 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         },
       })
+      .returning();
+    return user;
+  }
+
+  async updateUserTeamName(userId: string, teamName: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ teamName, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

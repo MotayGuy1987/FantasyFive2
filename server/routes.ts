@@ -197,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save team name to user record (one-time only, can't be changed)
       const user = await storage.getUser(userId);
       if (user && !user.teamName) {
-        await storage.upsertUser({ id: userId, teamName });
+        await storage.updateUserTeamName(userId, teamName);
       }
 
       res.json({ success: true, team });

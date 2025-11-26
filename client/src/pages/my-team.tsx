@@ -776,10 +776,9 @@ export default function MyTeam() {
                 </div>
               </CardContent>
             </Card>
-              )}
-            </>
           )}
         </TabsContent>
+        )}
       </Tabs>
 
       <Dialog open={performanceModalOpen} onOpenChange={setPerformanceModalOpen}>

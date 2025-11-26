@@ -398,10 +398,68 @@ export default function Admin() {
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Player Prices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Player</TableHead>
+                  <TableHead className="text-center">Price Adjust</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {players && Array.isArray(players) && players.map((player: Player) => (
+                  <TableRow key={player.id} data-testid={`player-row-${player.name.toLowerCase().replace(' ', '-')}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <PositionBadge position={player.position} />
+                        <span className="font-medium">{player.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="text-center text-sm">
+                          £{(parseFloat(player.price) + (priceChanges[player.id] || 0)).toFixed(1)}M
+                          {priceChanges[player.id] ? ` (${priceChanges[player.id] > 0 ? '+' : ''}${priceChanges[player.id].toFixed(1)})` : ''}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => adjustPrice(player.id, -0.1)}
+                            className="h-6 w-6"
+                            data-testid={`button-price-down-${player.id}`}
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => adjustPrice(player.id, 0.1)}
+                            className="h-6 w-6"
+                            data-testid={`button-price-up-${player.id}`}
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {selectedGameweek && (
         <Card>
           <CardHeader>
-            <CardTitle>Player Performances</CardTitle>
+            <CardTitle>Player Performances for Gameweek {gameweeks?.find((gw: Gameweek) => gw.id === selectedGameweek)?.number || ""}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -425,33 +483,7 @@ export default function Admin() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <PositionBadge position={player.position} />
-                          <div>
-                            <div className="font-medium">{player.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              £{(parseFloat(player.price) + (priceChanges[player.id] || 0)).toFixed(1)}M
-                              {priceChanges[player.id] ? ` (${priceChanges[player.id] > 0 ? '+' : ''}${priceChanges[player.id].toFixed(1)})` : ''}
-                            </div>
-                          </div>
-                          <div className="flex gap-1 ml-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => adjustPrice(player.id, -0.1)}
-                              className="h-6 w-6"
-                              data-testid={`button-price-down-${player.id}`}
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => adjustPrice(player.id, 0.1)}
-                              className="h-6 w-6"
-                              data-testid={`button-price-up-${player.id}`}
-                            >
-                              <ChevronUp className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          <span className="font-medium">{player.name}</span>
                         </div>
                       </TableCell>
                       <TableCell>

@@ -66,6 +66,16 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
+  const { data: playerOfWeek } = useQuery<{ player: Player | null; points: number; gameweekNumber?: number; message?: string }>({
+    queryKey: ["/api/dashboard/player-of-week"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: teamOfWeek } = useQuery<{ team: Team | null; user: { firstName: string; email: string } | null; points: number; message?: string }>({
+    queryKey: ["/api/dashboard/team-of-week"],
+    enabled: isAuthenticated,
+  });
+
   const activateChipMutation = useMutation({
     mutationFn: async (chipType: "BENCH_BOOST" | "TRIPLE_CAPTAIN") => {
       if (!currentGameweek) throw new Error("No active gameweek");
@@ -209,6 +219,46 @@ export default function Home() {
               <CardContent>
                 <div className="text-3xl font-bold font-mono">{team.freeTransfers || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Available now</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Player of the Week</CardTitle>
+                <Star className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {playerOfWeek?.message === "N/A" || !playerOfWeek?.player ? (
+                  <p className="text-sm text-muted-foreground">N/A</p>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold">{playerOfWeek.player.name}</p>
+                    <p className="text-xs text-muted-foreground">{playerOfWeek.points} points</p>
+                    {playerOfWeek.gameweekNumber && (
+                      <p className="text-xs text-muted-foreground mt-1">GW {playerOfWeek.gameweekNumber}</p>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Team of the Week</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {teamOfWeek?.message === "N/A" || !teamOfWeek?.team ? (
+                  <p className="text-sm text-muted-foreground">N/A</p>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold">{teamOfWeek.team.teamName}</p>
+                    <p className="text-xs text-muted-foreground">{teamOfWeek.user?.firstName || "Manager"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{teamOfWeek.points} points</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

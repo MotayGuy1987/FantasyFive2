@@ -316,6 +316,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/dashboard/player-of-week", isAuthenticated, async (req, res) => {
+    try {
+      const allGameweeks = await storage.getAllGameweeks();
+      const allPlayers = await storage.getAllPlayers();
+
+      let targetGameweek = allGameweeks.find((gw) => gw.isActive);
+      if (!targetGameweek && allGameweeks.length > 0) {
+        targetGameweek = allGameweeks.sort((a, b) => b.number - a.number)[0];
+      }
+
+      if (!targetGameweek) {
+        return res.json({ player: null, points: 0, message: "N/A" });
+      }
+
+      const performances = await storage.getAllPlayerPerformances(targetGameweek.id);
+      if (performances.length === 0) {
+        return res.json({ player: null, points: 0, message: "N/A" });
+      }
+
+      const bestPerf = performances.reduce((max, perf) => 
+        (perf.points || 0) > (max.points || 0) ? perf : max
+      );
+
+      const player = allPlayers.find((p) => p.id === bestPerf.playerId);
+      res.json({ player, points: bestPerf.points || 0, gameweekNumber: targetGameweek.number });
+    } catch (error) {
+      console.error("Error fetching player of week:", error);
+      res.status(500).json({ message: "Failed to fetch player of week" });
+    }
+  });
+
+  app.get("/api/dashboard/team-of-week", isAuthenticated, async (req, res) => {
+    try {
+      const allTeams = await storage.getAllTeams();
+      const allGameweeks = await storage.getAllGameweeks();
+      const allPlayers = await storage.getAllPlayers();
+
+      const teamScores: any[] = [];
+
+      for (const team of allTeams) {
+        const user = await storage.getUser(team.userId);
+        if (user?.email === "admin@admin.com") continue;
+
+        let totalPoints = 0;
+        for (const gameweek of allGameweeks) {
+          const score = await storage.getGameweekScore(team.id, gameweek.id);
+          totalPoints += score?.points || 0;
+        }
+
+        const teamPlayers = await storage.getTeamPlayers(team.id);
+        teamScores.push({ team, user, points: totalPoints, playerCount: teamPlayers.length });
+      }
+
+      if (teamScores.length === 0) {
+        return res.json({ team: null, user: null, points: 0, message: "N/A" });
+      }
+
+      const bestTeam = teamScores.reduce((max, ts) => ts.points > max.points ? ts : max);
+      if (bestTeam.points === 0) {
+        return res.json({ team: null, user: null, points: 0, message: "N/A" });
+      }
+
+      res.json({ 
+        team: bestTeam.team, 
+        user: { firstName: bestTeam.user.firstName, email: bestTeam.user.email },
+        points: bestTeam.points 
+      });
+    } catch (error) {
+      console.error("Error fetching team of week:", error);
+      res.status(500).json({ message: "Failed to fetch team of week" });
+    }
+  });
+
   app.get("/api/stats", isAuthenticated, async (req, res) => {
     try {
       const allGameweeks = await storage.getAllGameweeks();

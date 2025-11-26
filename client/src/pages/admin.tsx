@@ -428,7 +428,11 @@ export default function Admin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {players && Array.isArray(players) && players.map((player: Player) => (
+                {players && Array.isArray(players) && [...players].sort((a, b) => {
+                  const aPrice = parseFloat(a.price) + (priceChanges[a.id] || 0);
+                  const bPrice = parseFloat(b.price) + (priceChanges[b.id] || 0);
+                  return bPrice - aPrice;
+                }).map((player: Player) => (
                   <TableRow key={player.id} data-testid={`player-row-${player.name.toLowerCase().replace(' ', '-')}`}>
                     <TableCell>
                       <div className="flex items-center gap-2">

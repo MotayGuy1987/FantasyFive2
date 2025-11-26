@@ -672,10 +672,9 @@ export default function MyTeam() {
               </CardContent>
             </Card>
           </TabsContent>
-        )}
 
-        {existingTeamPlayers && existingTeamPlayers.length > 0 && (
-        <TabsContent value="transfers" className="space-y-6">
+          {existingTeamPlayers && existingTeamPlayers.length > 0 && (
+            <TabsContent value="transfers" className="space-y-6">
           <Card className="p-4">
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-1">Free Transfers</div>
@@ -834,8 +833,9 @@ export default function MyTeam() {
                 </div>
               </CardContent>
             </Card>
+            )}
+            </TabsContent>
           )}
-        </TabsContent>
         </Tabs>
       )}
 

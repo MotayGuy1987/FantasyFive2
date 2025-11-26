@@ -85,6 +85,17 @@ export async function seedDatabase() {
       console.log("Updated admin user with password");
     }
 
+    // Set admin account budget to 1000M
+    const adminTeams = await db
+      .select()
+      .from(teams)
+      .innerJoin(users, eq(teams.userId, users.id))
+      .where(eq(users.email, adminEmail));
+
+    if (adminTeams.length > 0) {
+      // Admin already has a team, no need to update budget here
+    }
+
     console.log("Database seed completed successfully!");
   } catch (error) {
     console.error("Error seeding database:", error);

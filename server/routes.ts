@@ -44,6 +44,8 @@ const submitPerformancesSchema = z.object({
     straightRed: z.boolean(),
     isMotm: z.boolean(),
     daysPlayed: z.number().int().min(0),
+    penaltiesMissed: z.number().int().min(0),
+    goalsConceded: z.number().int().min(0),
   })),
 });
 
@@ -60,7 +62,9 @@ function calculatePlayerPoints(
   straightRed: boolean,
   isMotm: boolean,
   daysPlayed: number,
-  position: string
+  position: string,
+  penaltiesMissed: number = 0,
+  goalsConceded: number = 0
 ): number {
   let points = 0;
 
@@ -75,6 +79,7 @@ function calculatePlayerPoints(
   points += assists * 3;
   points -= yellowCards * 1;
   points -= redCards * 2;
+  points -= penaltiesMissed * 3;
   
   if (straightRed) {
     points -= 3;
@@ -86,6 +91,11 @@ function calculatePlayerPoints(
 
   if (daysPlayed >= 4) {
     points += 2;
+  }
+
+  // Goals conceded: -1 point for every 3 goals (for defenders only)
+  if (position === "Defender") {
+    points -= Math.floor(goalsConceded / 3);
   }
 
   return points;
@@ -644,7 +654,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           perf.straightRed,
           perf.isMotm,
           perf.daysPlayed,
-          player.position
+          player.position,
+          perf.penaltiesMissed,
+          perf.goalsConceded
         );
 
         await storage.upsertPlayerPerformance({
@@ -657,6 +669,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           straightRed: perf.straightRed,
           isMotm: perf.isMotm,
           daysPlayed: perf.daysPlayed,
+          penaltiesMissed: perf.penaltiesMissed,
+          goalsConceded: perf.goalsConceded,
           points,
         });
 

@@ -38,6 +38,8 @@ interface PerformanceData {
   straightRed: boolean;
   isMotm: boolean;
   daysPlayed: number;
+  penaltiesMissed: number;
+  goalsConceded: number;
 }
 
 export default function Admin() {
@@ -196,6 +198,8 @@ export default function Admin() {
           straightRed: false,
           isMotm: false,
           daysPlayed: 0,
+          penaltiesMissed: 0,
+          goalsConceded: 0,
         };
       });
       setPerformances(initialPerformances);
@@ -336,6 +340,8 @@ export default function Admin() {
                     <TableHead className="text-center">Straight Red</TableHead>
                     <TableHead className="text-center">MOTM</TableHead>
                     <TableHead className="text-center">Days Played</TableHead>
+                    <TableHead className="text-center">Penalties Missed</TableHead>
+                    <TableHead className="text-center">Goals Conceded (DEF)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -410,6 +416,30 @@ export default function Admin() {
                           className="w-20 text-center"
                           data-testid={`input-days-${player.id}`}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={performances[player.id]?.penaltiesMissed || 0}
+                          onChange={(e) => updatePerformance(player.id, "penaltiesMissed", parseInt(e.target.value) || 0)}
+                          className="w-20 text-center"
+                          data-testid={`input-penalties-${player.id}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {player.position === "Defender" ? (
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.goalsConceded || 0}
+                            onChange={(e) => updatePerformance(player.id, "goalsConceded", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-conceded-${player.id}`}
+                          />
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

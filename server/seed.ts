@@ -27,6 +27,7 @@ const PLAYERS_DATA = [
   { name: "Matthew", position: "Midfielder", price: "7.5" },
   { name: "Nicholas", position: "Midfielder", price: "7.0" },
   { name: "Carsen", position: "Forward", price: "7.0" },
+  { name: "Jackson", position: "Forward", price: "7.0" },
   { name: "Alfred", position: "Midfielder", price: "6.5" },
   { name: "Elliott", position: "Defender", price: "6.5" },
   { name: "Maya", position: "Defender", price: "6.5" },

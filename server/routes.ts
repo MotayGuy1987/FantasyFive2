@@ -349,6 +349,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (perf.points || 0) > (max.points || 0) ? perf : max
       );
 
+      // If best performance is 0 points or less, return N/A
+      if ((bestPerf.points || 0) <= 0) {
+        return res.json({ player: null, points: 0, message: "N/A" });
+      }
+
       const player = allPlayers.find((p) => p.id === bestPerf.playerId);
       res.json({ player, points: bestPerf.points || 0, gameweekNumber: targetGameweek.number });
     } catch (error) {

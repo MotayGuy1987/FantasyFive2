@@ -65,6 +65,7 @@ export default function MyTeam() {
   const [positionFilter, setPositionFilter] = useState("All");
   const [selectedOut, setSelectedOut] = useState<Player | null>(null);
   const [selectedIn, setSelectedIn] = useState<Player | null>(null);
+  const [transferConfirmOpen, setTransferConfirmOpen] = useState(false);
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [bencedPlayerToSwap, setBencedPlayerToSwap] = useState<Player | null>(null);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
@@ -643,17 +644,22 @@ export default function MyTeam() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {sortedSelectedPlayers.map((player) => (
-                    <Button
-                      key={player.id}
-                      onClick={() => setSelectedOut(player)}
-                      variant={selectedOut?.id === player.id ? "default" : "outline"}
-                      className="w-full justify-start"
-                      data-testid={`button-select-out-${player.id}`}
-                    >
-                      <PositionBadge position={player.position} />
-                      <span className="ml-2 flex-1 text-left">{player.name}</span>
-                      <span className="text-xs">£{player.price}M</span>
-                    </Button>
+                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedOut?.id === player.id ? 'bg-red-500/10 border-red-500' : 'border-transparent hover:bg-muted'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <PositionBadge position={player.position} />
+                        <span className="font-medium flex-1">{player.name}</span>
+                        <span className="text-xs">£{player.price}M</span>
+                      </div>
+                      <Button
+                        onClick={() => setSelectedOut(player)}
+                        variant={selectedOut?.id === player.id ? "default" : "outline"}
+                        size="sm"
+                        className={`w-full ${selectedOut?.id === player.id ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}
+                        data-testid={`button-select-out-${player.id}`}
+                      >
+                        {selectedOut?.id === player.id ? 'Transfer Out' : 'Select to Transfer Out'}
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </CardContent>
@@ -675,17 +681,22 @@ export default function MyTeam() {
                 />
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {sortedAvailable.map((player) => (
-                    <Button
-                      key={player.id}
-                      onClick={() => setSelectedIn(player)}
-                      variant={selectedIn?.id === player.id ? "default" : "outline"}
-                      className="w-full justify-start"
-                      data-testid={`button-select-in-${player.id}`}
-                    >
-                      <PositionBadge position={player.position} />
-                      <span className="ml-2 flex-1 text-left">{player.name}</span>
-                      <span className="text-xs">£{player.price}M</span>
-                    </Button>
+                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedIn?.id === player.id ? 'bg-green-500/10 border-green-500' : 'border-transparent hover:bg-muted'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <PositionBadge position={player.position} />
+                        <span className="font-medium flex-1">{player.name}</span>
+                        <span className="text-xs">£{player.price}M</span>
+                      </div>
+                      <Button
+                        onClick={() => setSelectedIn(player)}
+                        variant={selectedIn?.id === player.id ? "default" : "outline"}
+                        size="sm"
+                        className={`w-full ${selectedIn?.id === player.id ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                        data-testid={`button-select-in-${player.id}`}
+                      >
+                        {selectedIn?.id === player.id ? 'Transfer In' : 'Select to Transfer In'}
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </CardContent>
@@ -697,23 +708,23 @@ export default function MyTeam() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Repeat className="h-5 w-5" />
-                  Transfer Preview
+                  Transfer Summary
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Out</Label>
-                    <div className="font-medium">{selectedOut.name}</div>
-                    <PositionBadge position={selectedOut.position} />
-                  </div>
-                  <div className="flex items-end justify-center">
-                    <Repeat className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">In</Label>
-                    <div className="font-medium">{selectedIn.name}</div>
-                    <PositionBadge position={selectedIn.position} />
+                <div className="border rounded-md p-4 bg-muted/50">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-red-600 dark:text-red-400">OUT</div>
+                      <div className="font-bold">{selectedOut.name}</div>
+                      <div className="text-sm text-muted-foreground">£{selectedOut.price}M - {selectedOut.position}</div>
+                    </div>
+                    <Repeat className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-green-600 dark:text-green-400">IN</div>
+                      <div className="font-bold">{selectedIn.name}</div>
+                      <div className="text-sm text-muted-foreground">£{selectedIn.price}M - {selectedIn.position}</div>
+                    </div>
                   </div>
                 </div>
 
@@ -726,12 +737,12 @@ export default function MyTeam() {
 
                 <div className="pt-4">
                   <Button
-                    onClick={handleConfirmTransfer}
-                    disabled={!canMakeTransfer || makeTransferMutation.isPending}
+                    onClick={() => setTransferConfirmOpen(true)}
+                    disabled={!canMakeTransfer}
                     className="w-full"
-                    data-testid="button-confirm-transfer"
+                    data-testid="button-open-confirm-transfer"
                   >
-                    {makeTransferMutation.isPending ? "Processing..." : `Confirm Transfer ${transferCost < 0 ? `(-${Math.abs(transferCost)} pts)` : "(Free)"}`}
+                    Review Transfer
                   </Button>
                 </div>
               </CardContent>
@@ -815,6 +826,65 @@ export default function MyTeam() {
                     </>
                   );
                 })()}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={transferConfirmOpen} onOpenChange={setTransferConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Transfer</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to proceed with this transfer?
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOut && selectedIn && (
+            <div className="space-y-4">
+              <div className="border rounded-md p-4 bg-muted/50">
+                <div className="flex items-center justify-center gap-4 text-center">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">OUT</div>
+                    <div className="font-bold">{selectedOut.name}</div>
+                    <div className="text-xs text-muted-foreground">£{selectedOut.price}M - {selectedOut.position}</div>
+                  </div>
+                  <Repeat className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">IN</div>
+                    <div className="font-bold">{selectedIn.name}</div>
+                    <div className="text-xs text-muted-foreground">£{selectedIn.price}M - {selectedIn.position}</div>
+                  </div>
+                </div>
+              </div>
+
+              {transferCost < 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This transfer will cost {Math.abs(transferCost)} points
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setTransferConfirmOpen(false)}
+                  disabled={makeTransferMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-cancel-confirm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmTransfer}
+                  disabled={makeTransferMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-confirm-transfer"
+                >
+                  {makeTransferMutation.isPending ? "Processing..." : "Confirm Transfer"}
+                </Button>
               </div>
             </div>
           )}

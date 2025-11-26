@@ -64,9 +64,9 @@ function isTeamNameValid(name: string): { isValid: boolean; error?: string } {
 
 // Point calculation system (must match server calculation)
 const POINT_MULTIPLIERS = {
-  Defender: { goal: 6, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
-  Midfielder: { goal: 5, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
-  Forward: { goal: 5, assist: 3, yellowCard: -1, redCard: -2, straightRed: -3, motm: 3 },
+  Defender: { goal: 6, assist: 3, yellowCard: -1, redCard: -3, motm: 3 },
+  Midfielder: { goal: 5, assist: 3, yellowCard: -1, redCard: -3, motm: 3 },
+  Forward: { goal: 5, assist: 3, yellowCard: -1, redCard: -3, motm: 3 },
 };
 
 function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Record<string, number> {

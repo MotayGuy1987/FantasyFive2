@@ -22,7 +22,6 @@ interface PlayerStat {
   assists: number;
   yellowCards: number;
   redCards: number;
-  straightRed: boolean;
   isMotm: boolean;
   daysPlayed: number;
   penaltiesMissed: number;
@@ -95,7 +94,6 @@ export default function Stats() {
                     <TableHead className="text-center">Assists</TableHead>
                     <TableHead className="text-center">Yellow</TableHead>
                     <TableHead className="text-center">Red</TableHead>
-                    <TableHead className="text-center">Straight Red</TableHead>
                     <TableHead className="text-center">MOTM</TableHead>
                     <TableHead className="text-center">Days Played</TableHead>
                     <TableHead className="text-center">Penalties Missed</TableHead>
@@ -116,9 +114,6 @@ export default function Stats() {
                       <TableCell className="text-center">{stat.assists}</TableCell>
                       <TableCell className="text-center">{stat.yellowCards}</TableCell>
                       <TableCell className="text-center">{stat.redCards}</TableCell>
-                      <TableCell className="text-center">
-                        {stat.straightRed ? "Yes" : "-"}
-                      </TableCell>
                       <TableCell className="text-center">
                         {stat.isMotm ? "Yes" : "-"}
                       </TableCell>

@@ -35,7 +35,6 @@ interface PerformanceData {
   assists: number;
   yellowCards: number;
   redCards: number;
-  straightRed: boolean;
   isMotm: boolean;
   daysPlayed: number;
   penaltiesMissed: number;
@@ -195,7 +194,6 @@ export default function Admin() {
           assists: 0,
           yellowCards: 0,
           redCards: 0,
-          straightRed: false,
           isMotm: false,
           daysPlayed: 0,
           penaltiesMissed: 0,
@@ -337,7 +335,6 @@ export default function Admin() {
                     <TableHead className="text-center">Assists</TableHead>
                     <TableHead className="text-center">Yellow</TableHead>
                     <TableHead className="text-center">Red</TableHead>
-                    <TableHead className="text-center">Straight Red</TableHead>
                     <TableHead className="text-center">MOTM</TableHead>
                     <TableHead className="text-center">Days Played</TableHead>
                     <TableHead className="text-center">Penalties Missed</TableHead>
@@ -391,13 +388,6 @@ export default function Admin() {
                           onChange={(e) => updatePerformance(player.id, "redCards", parseInt(e.target.value) || 0)}
                           className="w-20 text-center"
                           data-testid={`input-red-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={performances[player.id]?.straightRed || false}
-                          onCheckedChange={(checked) => updatePerformance(player.id, "straightRed", checked as boolean)}
-                          data-testid={`checkbox-straight-red-${player.id}`}
                         />
                       </TableCell>
                       <TableCell className="text-center">

@@ -41,7 +41,6 @@ const submitPerformancesSchema = z.object({
     assists: z.number().int().min(0),
     yellowCards: z.number().int().min(0),
     redCards: z.number().int().min(0),
-    straightRed: z.boolean(),
     isMotm: z.boolean(),
     daysPlayed: z.number().int().min(0),
     penaltiesMissed: z.number().int().min(0),
@@ -59,7 +58,6 @@ function calculatePlayerPoints(
   assists: number,
   yellowCards: number,
   redCards: number,
-  straightRed: boolean,
   isMotm: boolean,
   daysPlayed: number,
   position: string,
@@ -78,12 +76,8 @@ function calculatePlayerPoints(
 
   points += assists * 3;
   points -= yellowCards * 1;
-  points -= redCards * 2;
+  points -= redCards * 3;
   points -= penaltiesMissed * 3;
-  
-  if (straightRed) {
-    points -= 3;
-  }
 
   if (isMotm) {
     points += 3;

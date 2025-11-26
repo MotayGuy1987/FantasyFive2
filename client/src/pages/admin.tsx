@@ -400,7 +400,11 @@ export default function Admin() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Player Prices</CardTitle>
+          <CardTitle>
+            {selectedGameweek
+              ? `Manage Players - Gameweek ${gameweeks?.find((gw: Gameweek) => gw.id === selectedGameweek)?.number || ""}`
+              : "Manage Player Prices"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -408,7 +412,19 @@ export default function Admin() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Player</TableHead>
-                  <TableHead className="text-center">Price Adjust</TableHead>
+                  <TableHead className="text-center">Price</TableHead>
+                  {selectedGameweek && (
+                    <>
+                      <TableHead className="text-center">Goals</TableHead>
+                      <TableHead className="text-center">Assists</TableHead>
+                      <TableHead className="text-center">Yellow</TableHead>
+                      <TableHead className="text-center">Red</TableHead>
+                      <TableHead className="text-center">MOTM</TableHead>
+                      <TableHead className="text-center">Days Played</TableHead>
+                      <TableHead className="text-center">Penalties Missed</TableHead>
+                      <TableHead className="text-center">Goals Conceded (DEF)</TableHead>
+                    </>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -448,130 +464,97 @@ export default function Admin() {
                         </div>
                       </div>
                     </TableCell>
+                    {selectedGameweek && (
+                      <>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.goals || 0}
+                            onChange={(e) => updatePerformance(player.id, "goals", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-goals-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.assists || 0}
+                            onChange={(e) => updatePerformance(player.id, "assists", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-assists-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.yellowCards || 0}
+                            onChange={(e) => updatePerformance(player.id, "yellowCards", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-yellow-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.redCards || 0}
+                            onChange={(e) => updatePerformance(player.id, "redCards", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-red-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={performances[player.id]?.isMotm || false}
+                            onCheckedChange={(checked) => updatePerformance(player.id, "isMotm", checked as boolean)}
+                            data-testid={`checkbox-motm-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.daysPlayed || 0}
+                            onChange={(e) => updatePerformance(player.id, "daysPlayed", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-days-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={performances[player.id]?.penaltiesMissed || 0}
+                            onChange={(e) => updatePerformance(player.id, "penaltiesMissed", parseInt(e.target.value) || 0)}
+                            className="w-20 text-center"
+                            data-testid={`input-penalties-${player.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {player.position === "Defender" ? (
+                            <Input
+                              type="number"
+                              min="0"
+                              value={performances[player.id]?.goalsConceded || 0}
+                              onChange={(e) => updatePerformance(player.id, "goalsConceded", parseInt(e.target.value) || 0)}
+                              className="w-20 text-center"
+                              data-testid={`input-conceded-${player.id}`}
+                            />
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      {selectedGameweek && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Player Performances for Gameweek {gameweeks?.find((gw: Gameweek) => gw.id === selectedGameweek)?.number || ""}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="text-center">Goals</TableHead>
-                    <TableHead className="text-center">Assists</TableHead>
-                    <TableHead className="text-center">Yellow</TableHead>
-                    <TableHead className="text-center">Red</TableHead>
-                    <TableHead className="text-center">MOTM</TableHead>
-                    <TableHead className="text-center">Days Played</TableHead>
-                    <TableHead className="text-center">Penalties Missed</TableHead>
-                    <TableHead className="text-center">Goals Conceded (DEF)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {players && Array.isArray(players) && players.map((player: Player) => (
-                    <TableRow key={player.id} data-testid={`performance-row-${player.name.toLowerCase().replace(' ', '-')}`}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <PositionBadge position={player.position} />
-                          <span className="font-medium">{player.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.goals || 0}
-                          onChange={(e) => updatePerformance(player.id, "goals", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-goals-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.assists || 0}
-                          onChange={(e) => updatePerformance(player.id, "assists", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-assists-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.yellowCards || 0}
-                          onChange={(e) => updatePerformance(player.id, "yellowCards", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-yellow-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.redCards || 0}
-                          onChange={(e) => updatePerformance(player.id, "redCards", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-red-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={performances[player.id]?.isMotm || false}
-                          onCheckedChange={(checked) => updatePerformance(player.id, "isMotm", checked as boolean)}
-                          data-testid={`checkbox-motm-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.daysPlayed || 0}
-                          onChange={(e) => updatePerformance(player.id, "daysPlayed", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-days-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={performances[player.id]?.penaltiesMissed || 0}
-                          onChange={(e) => updatePerformance(player.id, "penaltiesMissed", parseInt(e.target.value) || 0)}
-                          className="w-20 text-center"
-                          data-testid={`input-penalties-${player.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {player.position === "Defender" ? (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={performances[player.id]?.goalsConceded || 0}
-                            onChange={(e) => updatePerformance(player.id, "goalsConceded", parseInt(e.target.value) || 0)}
-                            className="w-20 text-center"
-                            data-testid={`input-conceded-${player.id}`}
-                          />
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+          {selectedGameweek && (
             <div className="mt-6 space-y-3">
               <Button
                 onClick={handleSubmitPerformances}
@@ -597,9 +580,9 @@ export default function Admin() {
                 {endGameweekMutation.isPending ? "Ending..." : "End Gameweek"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

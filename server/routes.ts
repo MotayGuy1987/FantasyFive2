@@ -770,6 +770,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
         
+        // Get transfers this gameweek to exclude players transferred in (no advantage)
+        const transfers = await storage.getTransfersByGameweek(team.id, gameweekId);
+        const playersTransferredInIds = new Set(transfers.map(t => t.playerInId));
+        
         let totalPoints = 0;
         let benchBoostUsed = false;
         let tripleCaptainUsed = false;
@@ -781,6 +785,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tripleCaptainUsed = gameweekChips.some((c) => c.chipType === "TRIPLE_CAPTAIN");
 
         for (const tp of teamPlayers) {
+          // Skip players transferred in this gameweek (no advantage from mid-week transfers)
+          if (playersTransferredInIds.has(tp.playerId)) {
+            continue;
+          }
+          
           const performance = await storage.getPlayerPerformance(tp.playerId, gameweekId);
           const playerPoints = performance?.points || 0;
 
@@ -803,7 +812,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tripleCaptainUsed,
         });
 
-        const transfers = await storage.getTransfersByGameweek(team.id, gameweekId);
         const transferCost = transfers.reduce((sum, t) => sum + (t.cost || 0), 0);
         
         const newTotalPoints = (team.totalPoints || 0) + totalPoints + transferCost;

@@ -85,6 +85,11 @@ export default function Admin() {
     enabled: isAuthenticated && !!isAdmin,
   });
 
+  const { data: existingPerformances } = useQuery<(any & { player: Player })[]>({
+    queryKey: ["/api/gameweek", selectedGameweek, "player-performances"],
+    enabled: isAuthenticated && !!isAdmin && !!selectedGameweek,
+  });
+
   const createGameweekMutation = useMutation({
     mutationFn: async (data: { number: number }) => {
       await apiRequest("POST", "/api/gameweeks", data);
@@ -200,9 +205,29 @@ export default function Admin() {
           goalsConceded: 0,
         };
       });
+      
+      // Load existing performances if available
+      if (existingPerformances && Array.isArray(existingPerformances)) {
+        existingPerformances.forEach((perf: any) => {
+          if (initialPerformances[perf.playerId]) {
+            initialPerformances[perf.playerId] = {
+              playerId: perf.playerId,
+              goals: perf.goals || 0,
+              assists: perf.assists || 0,
+              yellowCards: perf.yellowCards || 0,
+              redCards: perf.redCards || 0,
+              isMotm: perf.isMotm || false,
+              daysPlayed: perf.daysPlayed || 0,
+              penaltiesMissed: perf.penaltiesMissed || 0,
+              goalsConceded: perf.goalsConceded || 0,
+            };
+          }
+        });
+      }
+      
       setPerformances(initialPerformances);
     }
-  }, [players, selectedGameweek]);
+  }, [players, selectedGameweek, existingPerformances]);
 
   const updatePerformance = (playerId: string, field: keyof PerformanceData, value: number | boolean) => {
     setPerformances((prev) => ({

@@ -34,6 +34,33 @@ import type { Team, Player, TeamPlayer, Gameweek, PlayerPerformance } from "@sha
 const DEFAULT_BUDGET = 50.0;
 const SQUAD_SIZE = 5;
 const BENCH_SIZE = 1;
+const TEAM_NAME_MAX_LENGTH = 30;
+
+// Inappropriate words filter
+const INAPPROPRIATE_WORDS = [
+  'hate', 'kill', 'death', 'suicide', 'rape', 'porn', 'sex', 'ass', 'bitch',
+  'damn', 'shit', 'fuck', 'cunt', 'nazi', 'hitler', 'racist', 'pedophile',
+  'terrorist', 'bomb', 'covid', 'virus', 'disease'
+];
+
+function isTeamNameValid(name: string): { isValid: boolean; error?: string } {
+  if (!name.trim()) {
+    return { isValid: false, error: 'Team name cannot be empty' };
+  }
+  
+  if (name.length > TEAM_NAME_MAX_LENGTH) {
+    return { isValid: false, error: `Team name must be ${TEAM_NAME_MAX_LENGTH} characters or less` };
+  }
+  
+  const lowerName = name.toLowerCase();
+  for (const word of INAPPROPRIATE_WORDS) {
+    if (lowerName.includes(word)) {
+      return { isValid: false, error: 'Team name contains inappropriate content' };
+    }
+  }
+  
+  return { isValid: true };
+}
 
 // Point calculation system (must match server calculation)
 const POINT_MULTIPLIERS = {
@@ -404,14 +431,21 @@ export default function MyTeam() {
             {/* Team Name and Confirm Button - Always Visible Before First Player */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="team-name">Team Name</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="team-name">Team Name</Label>
+                  <span className="text-xs text-muted-foreground">{teamName.length}/{TEAM_NAME_MAX_LENGTH}</span>
+                </div>
                 <Input
                   id="team-name"
                   placeholder="Enter your team name"
                   value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
+                  onChange={(e) => setTeamName(e.target.value.slice(0, TEAM_NAME_MAX_LENGTH))}
+                  maxLength={TEAM_NAME_MAX_LENGTH}
                   data-testid="input-team-name"
                 />
+                {teamName.trim() && !isTeamNameValid(teamName).isValid && (
+                  <p className="text-xs text-red-600 dark:text-red-400">{isTeamNameValid(teamName).error}</p>
+                )}
               </div>
 
               <Card className="p-4 bg-blue-500/5 border-blue-500/20">
@@ -428,12 +462,12 @@ export default function MyTeam() {
                     {selectedPlayers.length === 6 && captainId && benchPlayerId && !squadValidation.isValid && (
                       <div className="text-red-600 dark:text-red-400">⚠️ {squadValidation.errors[0]}</div>
                     )}
-                    {isSquadComplete && <div className="text-green-600 dark:text-green-400 font-medium">✓ Ready to save!</div>}
+                    {isSquadComplete && isTeamNameValid(teamName).isValid && <div className="text-green-600 dark:text-green-400 font-medium">✓ Ready to save!</div>}
                   </div>
 
                   <Button
                     onClick={() => saveSquadMutation.mutate()}
-                    disabled={saveSquadMutation.isPending || !teamName.trim() || !isSquadComplete}
+                    disabled={saveSquadMutation.isPending || !isTeamNameValid(teamName).isValid || !isSquadComplete}
                     size="lg"
                     className="w-full mt-2"
                     data-testid="button-confirm-team"

@@ -549,6 +549,8 @@ export default function MyTeam() {
                 )}
               </CardContent>
             </Card>
+              )}
+            </>
           )}
 
           <Card>

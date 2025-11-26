@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         team = await storage.createTeam({ 
           userId, 
           budget: String(budget), 
-          freeTransfers: 999, // Infinite transfers during first squad build
+          freeTransfers: 1,
           firstGameweekId: currentGameweek?.id || undefined,
         });
       }
@@ -481,8 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const transfersThisGameweek = await storage.getTransfersByGameweek(team.id, gameweekId);
       const freeTransfers = team.freeTransfers || 0;
-      // If freeTransfers >= 999, it's infinite (during first squad build), so cost is 0
-      const cost = (freeTransfers >= 999 || transfersThisGameweek.length < freeTransfers) ? 0 : -2;
+      const cost = (transfersThisGameweek.length < freeTransfers) ? 0 : -2;
 
       await storage.deleteTeamPlayers(team.id);
       
@@ -520,8 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Only decrement if not infinite transfers (freeTransfers < 999)
-      const newFreeTransfers = freeTransfers >= 999 ? 999 : (cost === 0 ? Math.max(0, freeTransfers - 1) : freeTransfers);
+      const newFreeTransfers = cost === 0 ? Math.max(0, freeTransfers - 1) : freeTransfers;
       await storage.updateTeam(team.id, { freeTransfers: newFreeTransfers });
 
       res.json({ success: true });
@@ -923,14 +921,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.updateGameweek(gameweekId, { isCompleted: true });
-
-      // Reset free transfers for teams that started in this gameweek (from infinite to 1)
-      const allTeams = await storage.getAllTeams();
-      for (const t of allTeams) {
-        if (t.firstGameweekId === gameweekId && (t.freeTransfers ?? 0) >= 999) {
-          await storage.updateTeam(t.id, { freeTransfers: 1 });
-        }
-      }
 
       res.json({ success: true });
     } catch (error) {

@@ -316,8 +316,10 @@ export default function MyTeam() {
   };
 
   const squadValidation = validateSquad(selectedPlayers, benchPlayerId);
-  const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId && squadValidation.isValid;
   const totalBudgetUsed = selectedPlayers.reduce((sum, p) => sum + (parseFloat(String(p.price)) || 0), 0);
+  const budgetRemaining = BUDGET - totalBudgetUsed;
+  const isBudgetValid = totalBudgetUsed <= BUDGET && budgetRemaining >= 0;
+  const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId && squadValidation.isValid && isBudgetValid;
 
   return (
     <div className="p-6 space-y-6">

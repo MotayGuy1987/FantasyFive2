@@ -12,6 +12,7 @@ import Home from "@/pages/home";
 import MyTeam from "@/pages/my-team";
 import Leagues from "@/pages/leagues";
 import Admin from "@/pages/admin";
+import Stats from "@/pages/stats";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/my-team" component={MyTeam} />
       <Route path="/leagues" component={Leagues} />
+      <Route path="/stats" component={Stats} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

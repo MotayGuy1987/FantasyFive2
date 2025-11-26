@@ -1,4 +1,4 @@
-import { Home, Users, Repeat, Trophy, ShieldCheck } from "lucide-react";
+import { Home, Users, Repeat, Trophy, ShieldCheck, BarChart3 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -34,6 +34,11 @@ const menuItems = [
     title: "Leagues",
     url: "/leagues",
     icon: Trophy,
+  },
+  {
+    title: "Stats",
+    url: "/stats",
+    icon: BarChart3,
   },
 ];
 

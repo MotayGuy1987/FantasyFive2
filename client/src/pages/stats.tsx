@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { BarChart3 } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
-import type { Player, Gameweek } from "@shared/schema";
+import type { Player } from "@shared/schema";
 
 interface PlayerStat {
   player: Player;
@@ -48,14 +48,9 @@ export default function Stats() {
     }
   }, [isAuthenticated, authLoading, toast]);
 
-  const { data: currentGameweek } = useQuery<Gameweek>({
-    queryKey: ["/api/gameweeks/current"],
-    enabled: isAuthenticated,
-  });
-
   const { data: stats, isLoading } = useQuery<PlayerStat[]>({
-    queryKey: ["/api/stats", currentGameweek?.id],
-    enabled: isAuthenticated && !!currentGameweek,
+    queryKey: ["/api/stats"],
+    enabled: isAuthenticated,
   });
 
   if (authLoading || isLoading) {
@@ -75,22 +70,14 @@ export default function Stats() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">Player Stats</h1>
-          <p className="text-muted-foreground">
-            {currentGameweek ? `Gameweek ${currentGameweek.number} Statistics` : "No active gameweek"}
-          </p>
+          <p className="text-muted-foreground">All Time Season Statistics</p>
         </div>
       </div>
 
-      {!currentGameweek ? (
+      {!stats || stats.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-muted-foreground">No active gameweek. Check back when a gameweek is active!</p>
-          </CardContent>
-        </Card>
-      ) : !stats || stats.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground">No performance data available yet for this gameweek.</p>
+            <p className="text-muted-foreground">No performance data available yet.</p>
           </CardContent>
         </Card>
       ) : (

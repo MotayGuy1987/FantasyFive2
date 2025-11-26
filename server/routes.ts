@@ -318,29 +318,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stats", isAuthenticated, async (req, res) => {
     try {
-      const currentGameweek = await storage.getCurrentGameweek();
-      
-      if (!currentGameweek) {
-        return res.json([]);
-      }
-
-      const performances = await storage.getAllPlayerPerformances(currentGameweek.id);
+      const allGameweeks = await storage.getAllGameweeks();
       const allPlayers = await storage.getAllPlayers();
 
+      // Get all performances across all gameweeks
+      const allPerformances: any[] = [];
+      for (const gameweek of allGameweeks) {
+        const perfs = await storage.getAllPlayerPerformances(gameweek.id);
+        allPerformances.push(...perfs);
+      }
+
+      // Aggregate stats across all gameweeks for each player
       const stats = allPlayers.map((player) => {
-        const perf = performances.find((p) => p.playerId === player.id);
+        const playerPerfs = allPerformances.filter((p) => p.playerId === player.id);
+        
         return {
           player,
-          goals: perf?.goals || 0,
-          assists: perf?.assists || 0,
-          yellowCards: perf?.yellowCards || 0,
-          redCards: perf?.redCards || 0,
-          straightRed: perf?.straightRed || false,
-          isMotm: perf?.isMotm || false,
-          daysPlayed: perf?.daysPlayed || 0,
-          penaltiesMissed: perf?.penaltiesMissed || 0,
-          goalsConceded: perf?.goalsConceded || 0,
-          points: perf?.points || 0,
+          goals: playerPerfs.reduce((sum, p) => sum + (p.goals || 0), 0),
+          assists: playerPerfs.reduce((sum, p) => sum + (p.assists || 0), 0),
+          yellowCards: playerPerfs.reduce((sum, p) => sum + (p.yellowCards || 0), 0),
+          redCards: playerPerfs.reduce((sum, p) => sum + (p.redCards || 0), 0),
+          straightRed: playerPerfs.some((p) => p.straightRed),
+          isMotm: playerPerfs.some((p) => p.isMotm),
+          daysPlayed: playerPerfs.reduce((sum, p) => sum + (p.daysPlayed || 0), 0),
+          penaltiesMissed: playerPerfs.reduce((sum, p) => sum + (p.penaltiesMissed || 0), 0),
+          goalsConceded: playerPerfs.reduce((sum, p) => sum + (p.goalsConceded || 0), 0),
+          points: playerPerfs.reduce((sum, p) => sum + (p.points || 0), 0),
         };
       });
 

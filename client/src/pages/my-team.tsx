@@ -450,11 +450,15 @@ export default function MyTeam() {
       <Tabs defaultValue="squad" className="space-y-6">
         <TabsList>
           <TabsTrigger value="squad">Squad</TabsTrigger>
-          <TabsTrigger value="transfers">Transfers</TabsTrigger>
+          {existingTeamPlayers && existingTeamPlayers.length > 0 && (
+            <TabsTrigger value="transfers">Transfers</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="squad" className="space-y-6">
-          {selectedPlayers.length < 6 && players && (
+          {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
+            <>
+              {players && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -480,15 +484,12 @@ export default function MyTeam() {
                             setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
                             if (benchPlayerId === player.id) setBenchPlayerId(null);
                             if (captainId === player.id) setCaptainId(null);
-                          } else {
-                            if (selectedPlayers.length < 6) {
-                              setSelectedPlayers([...selectedPlayers, player]);
-                            }
+                          } else if (selectedPlayers.length < 6) {
+                            setSelectedPlayers([...selectedPlayers, player]);
                           }
                         }}
                         variant={isSelected ? "default" : "outline"}
                         className="w-full justify-start"
-                        disabled={selectedPlayers.length >= 6 && !isSelected}
                         data-testid={`button-squad-player-${player.id}`}
                       >
                         <PositionBadge position={player.position} />
@@ -501,9 +502,11 @@ export default function MyTeam() {
                 </div>
               </CardContent>
             </Card>
-          )}
-
-          {existingTeamPlayers && existingTeamPlayers.length > 0 && currentGameweek && gameweekScore && playerPerformances && (
+              )}
+            </>
+          ) : (
+            <>
+              {currentGameweek && gameweekScore && playerPerformances && (
             <Card>
               <CardHeader>
                 <CardTitle>Gameweek {currentGameweek.number} Scores</CardTitle>
@@ -611,6 +614,7 @@ export default function MyTeam() {
           </Card>
         </TabsContent>
 
+        {existingTeamPlayers && existingTeamPlayers.length > 0 && (
         <TabsContent value="transfers" className="space-y-6">
           <Card className="p-4">
             <div className="text-center">
@@ -770,6 +774,8 @@ export default function MyTeam() {
                 </div>
               </CardContent>
             </Card>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>

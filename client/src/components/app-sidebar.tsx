@@ -1,5 +1,6 @@
-import { Home, Users, Repeat, Trophy, ShieldCheck, BarChart3 } from "lucide-react";
+import { Home, Users, Repeat, Trophy, ShieldCheck, BarChart3, Settings, Moon, Sun } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +18,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useTheme } from "@/hooks/useTheme";
 import type { User } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const baseMenuItems = [
   {
@@ -45,7 +54,9 @@ const adminMenuItem = {
 
 export function AppSidebar() {
   const [location, navigate] = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const userData = user as User | undefined;
   
   const isAdmin = userData?.email === "admin@admin.com";
@@ -116,7 +127,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 space-y-2">
         {userData && (
           <div className="flex items-center gap-3 rounded-md p-2 hover-elevate">
             <Avatar className="h-8 w-8">
@@ -133,16 +144,61 @@ export function AppSidebar() {
                 {userData.teamName || 'No team yet'}
               </p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSettingsOpen(true)}
+              data-testid="button-settings"
+              className="h-8 w-8"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
         )}
         <Button 
           variant="outline" 
-          className="w-full mt-2"
+          className="w-full"
           onClick={handleLogout}
           data-testid="button-logout"
         >
           Log Out
         </Button>
+
+        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Settings</DialogTitle>
+              <DialogDescription>
+                Manage your preferences
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-md border">
+                <div className="flex items-center gap-3">
+                  {theme === "light" ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">Theme</p>
+                    <p className="text-xs text-muted-foreground">
+                      {theme === "light" ? "Light Mode" : "Dark Mode"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleTheme}
+                  data-testid="button-toggle-theme"
+                >
+                  {theme === "light" ? "Dark" : "Light"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </SidebarFooter>
     </Sidebar>
   );

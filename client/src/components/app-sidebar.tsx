@@ -19,16 +19,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
-const menuItems = [
+const baseMenuItems = [
   {
     title: "Dashboard",
     url: "/",
     icon: Home,
-  },
-  {
-    title: "My Team",
-    url: "/my-team",
-    icon: Users,
   },
   {
     title: "Leagues",
@@ -54,6 +49,20 @@ export function AppSidebar() {
   const userData = user as User | undefined;
   
   const isAdmin = userData?.email === "admin@admin.com";
+  const hasTeam = !!userData?.teamName;
+  
+  const teamMenuItem = {
+    title: hasTeam ? "My Team" : "Build First Team",
+    url: hasTeam ? "/my-team" : "/build-first-team",
+    icon: Users,
+  };
+  
+  const menuItems = [
+    baseMenuItems[0],
+    teamMenuItem,
+    baseMenuItems[1],
+    baseMenuItems[2],
+  ];
   
   const handleLogout = async () => {
     try {

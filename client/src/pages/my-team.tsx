@@ -447,20 +447,8 @@ export default function MyTeam() {
         )}
       </div>
 
-      <Tabs defaultValue={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} value={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} onValueChange={() => {}} className="space-y-6">
-        <TabsList>
-          {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
-            <TabsTrigger value="build">Build First Team</TabsTrigger>
-          ) : (
-            <>
-              <TabsTrigger value="squad">Squad</TabsTrigger>
-              <TabsTrigger value="transfers">Transfers</TabsTrigger>
-            </>
-          )}
-        </TabsList>
-
-        {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
-          <TabsContent value="build" className="space-y-6">
+      {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
+        <div className="space-y-6">
             {players && (
               <Card>
                 <CardHeader>
@@ -568,8 +556,14 @@ export default function MyTeam() {
               })}
             </CardContent>
           </Card>
-          </TabsContent>
-        ) : (
+        </div>
+      ) : (
+        <Tabs defaultValue="squad" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="squad">Squad</TabsTrigger>
+            <TabsTrigger value="transfers">Transfers</TabsTrigger>
+          </TabsList>
+
           <TabsContent value="squad" className="space-y-6">
             {currentGameweek && gameweekScore && playerPerformances && (
               <Card>
@@ -842,8 +836,8 @@ export default function MyTeam() {
             </Card>
           )}
         </TabsContent>
-        )}
-      </Tabs>
+        </Tabs>
+      )}
 
       <Dialog open={performanceModalOpen} onOpenChange={setPerformanceModalOpen}>
         <DialogContent>

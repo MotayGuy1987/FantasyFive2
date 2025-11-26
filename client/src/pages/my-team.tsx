@@ -401,6 +401,49 @@ export default function MyTeam() {
               </CardContent>
             </Card>
 
+            {/* Team Name and Confirm Button - Always Visible Before First Player */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="team-name">Team Name</Label>
+                <Input
+                  id="team-name"
+                  placeholder="Enter your team name"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  data-testid="input-team-name"
+                />
+              </div>
+
+              <Card className="p-4 bg-blue-500/5 border-blue-500/20">
+                <div className="text-center space-y-3">
+                  <div className="text-sm font-medium">Squad Builder Status</div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    {selectedPlayers.length === 0 && <div>Select 6 players to begin</div>}
+                    {selectedPlayers.length > 0 && selectedPlayers.length < 6 && <div>Need {6 - selectedPlayers.length} more player{6 - selectedPlayers.length !== 1 ? 's' : ''}</div>}
+                    {selectedPlayers.length === 6 && !captainId && <div>⚠️ Select a captain</div>}
+                    {selectedPlayers.length === 6 && captainId && !benchPlayerId && <div>⚠️ Select a bench player</div>}
+                    {selectedPlayers.length === 6 && captainId && benchPlayerId && !isBudgetValid && (
+                      <div className="text-red-600 dark:text-red-400">⚠️ Budget exceeded</div>
+                    )}
+                    {selectedPlayers.length === 6 && captainId && benchPlayerId && !squadValidation.isValid && (
+                      <div className="text-red-600 dark:text-red-400">⚠️ {squadValidation.errors[0]}</div>
+                    )}
+                    {isSquadComplete && <div className="text-green-600 dark:text-green-400 font-medium">✓ Ready to save!</div>}
+                  </div>
+
+                  <Button
+                    onClick={() => saveSquadMutation.mutate()}
+                    disabled={saveSquadMutation.isPending || !teamName.trim() || !isSquadComplete}
+                    size="lg"
+                    className="w-full mt-2"
+                    data-testid="button-confirm-team"
+                  >
+                    {saveSquadMutation.isPending ? "Confirming..." : "Confirm First Team"}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+
             {players && (
               <Card>
                 <CardHeader>

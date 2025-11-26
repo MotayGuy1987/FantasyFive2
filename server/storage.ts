@@ -83,6 +83,7 @@ export interface IStorage {
   getLeaguesByUser(userId: string): Promise<League[]>;
   createLeague(league: InsertLeague): Promise<League>;
   deleteLeague(leagueId: string): Promise<void>;
+  getOrCreateOverallLeague(): Promise<League>;
   
   getLeagueMembers(leagueId: string): Promise<(LeagueMember & { team: Team; user: User })[]>;
   addLeagueMember(member: InsertLeagueMember): Promise<LeagueMember>;
@@ -364,6 +365,30 @@ export class DatabaseStorage implements IStorage {
   async deleteLeague(leagueId: string): Promise<void> {
     await db.delete(leagueMembers).where(eq(leagueMembers.leagueId, leagueId));
     await db.delete(leagues).where(eq(leagues.id, leagueId));
+  }
+
+  async getOrCreateOverallLeague(): Promise<League> {
+    const existing = await db
+      .select()
+      .from(leagues)
+      .where(eq(leagues.isOverall, true))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const systemUserId = (await db.select().from(users).limit(1))[0]?.id || "system";
+    const [league] = await db
+      .insert(leagues)
+      .values({
+        name: "Overall League",
+        joinCode: "OVERALL",
+        createdBy: systemUserId,
+        isOverall: true,
+      })
+      .returning();
+    return league;
   }
 
   async getLeagueMembers(leagueId: string): Promise<(LeagueMember & { team: Team; user: User })[]> {

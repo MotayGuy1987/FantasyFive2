@@ -237,6 +237,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserTeamName(userId, teamName);
       }
 
+      // Add team to Overall League automatically
+      const overallLeague = await storage.getOrCreateOverallLeague();
+      const isAlreadyMember = await storage.isTeamInLeague(team.id, overallLeague.id);
+      if (!isAlreadyMember) {
+        await storage.addLeagueMember({
+          leagueId: overallLeague.id,
+          teamId: team.id,
+        });
+      }
+
       res.json({ success: true, team: { ...team, budget } });
     } catch (error) {
       console.error("Error creating/updating team:", error);

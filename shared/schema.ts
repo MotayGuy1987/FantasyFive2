@@ -119,6 +119,7 @@ export const leagues = pgTable("leagues", {
   name: varchar("name").notNull(),
   joinCode: varchar("join_code").notNull().unique(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
+  isOverall: boolean("is_overall").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

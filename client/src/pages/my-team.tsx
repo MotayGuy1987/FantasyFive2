@@ -351,7 +351,7 @@ export default function MyTeam() {
                   </div>
                   <div className="p-3 rounded-md bg-muted text-center">
                     <div className="text-xs text-muted-foreground mb-1">Budget Remaining</div>
-                    <div className="text-2xl font-bold text-primary">£{budget.toFixed(1)}M</div>
+                    <div className={`text-2xl font-bold ${!isBudgetValid ? 'text-red-600 dark:text-red-400' : 'text-primary'}`}>£{budgetRemaining.toFixed(1)}M</div>
                   </div>
                   <div className="p-3 rounded-md bg-muted text-center">
                     <div className="text-xs text-muted-foreground mb-1">Captain</div>

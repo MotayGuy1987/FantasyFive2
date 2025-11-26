@@ -644,7 +644,7 @@ export default function MyTeam() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {sortedSelectedPlayers.map((player) => (
-                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedOut?.id === player.id ? 'bg-red-500/10 border-red-500' : 'border-transparent hover:bg-muted'}`}>
+                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedOut?.id === player.id ? 'bg-red-600/25 border-red-600' : 'border-transparent hover:bg-muted'}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <PositionBadge position={player.position} />
                         <span className="font-medium flex-1">{player.name}</span>
@@ -681,7 +681,7 @@ export default function MyTeam() {
                 />
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {sortedAvailable.map((player) => (
-                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedIn?.id === player.id ? 'bg-green-500/10 border-green-500' : 'border-transparent hover:bg-muted'}`}>
+                    <div key={player.id} className={`p-3 rounded-md border-2 transition-colors ${selectedIn?.id === player.id ? 'bg-green-600/25 border-green-600' : 'border-transparent hover:bg-muted'}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <PositionBadge position={player.position} />
                         <span className="font-medium flex-1">{player.name}</span>

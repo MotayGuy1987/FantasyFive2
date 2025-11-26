@@ -622,10 +622,10 @@ export default function MyTeam() {
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-1">Free Transfers</div>
               <div className="text-2xl font-bold font-mono text-primary">
-                {freeTransfers}
+                {freeTransfers >= 999 ? "∞" : freeTransfers}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {freeTransfers === 0 ? "Next transfer: -2 pts" : "Available"}
+                {freeTransfers >= 999 ? "Unlimited this week" : (freeTransfers === 0 ? "Next transfer: -2 pts" : "Available")}
               </div>
             </div>
           </Card>

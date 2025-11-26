@@ -57,6 +57,7 @@ export const teams = pgTable("teams", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   budget: decimal("budget", { precision: 5, scale: 1 }).default("50.0"),
   freeTransfers: integer("free_transfers").default(1),
+  firstGameweekId: varchar("first_gameweek_id").references(() => gameweeks.id, { onDelete: 'set null' }),
   totalPoints: integer("total_points").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

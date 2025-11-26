@@ -217,7 +217,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let team = await storage.getTeamByUserId(userId);
       if (!team) {
-        team = await storage.createTeam({ userId, budget: String(budget), freeTransfers: 1 });
+        const currentGameweek = await storage.getCurrentGameweek();
+        team = await storage.createTeam({ 
+          userId, 
+          budget: String(budget), 
+          freeTransfers: 999, // Infinite transfers during first squad build
+          firstGameweekId: currentGameweek?.id || undefined,
+        });
       }
 
       await storage.deleteTeamPlayers(team.id);
@@ -399,7 +405,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const transfersThisGameweek = await storage.getTransfersByGameweek(team.id, gameweekId);
       const freeTransfers = team.freeTransfers || 0;
-      const cost = transfersThisGameweek.length >= freeTransfers ? -2 : 0;
+      // If freeTransfers >= 999, it's infinite (during first squad build), so cost is 0
+      const cost = (freeTransfers >= 999 || transfersThisGameweek.length < freeTransfers) ? 0 : -2;
 
       await storage.deleteTeamPlayers(team.id);
       
@@ -437,7 +444,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const newFreeTransfers = cost === 0 ? Math.max(0, freeTransfers - 1) : freeTransfers;
+      // Only decrement if not infinite transfers (freeTransfers < 999)
+      const newFreeTransfers = freeTransfers >= 999 ? 999 : (cost === 0 ? Math.max(0, freeTransfers - 1) : freeTransfers);
       await storage.updateTeam(team.id, { freeTransfers: newFreeTransfers });
 
       res.json({ success: true });
@@ -820,6 +828,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.updateGameweek(gameweekId, { isCompleted: true });
+
+      // Reset free transfers for teams that started in this gameweek (from infinite to 1)
+      const allTeams = await storage.getAllTeams();
+      for (const t of allTeams) {
+        if (t.firstGameweekId === gameweekId && t.freeTransfers >= 999) {
+          await storage.updateTeam(t.id, { freeTransfers: 1 });
+        }
+      }
 
       res.json({ success: true });
     } catch (error) {

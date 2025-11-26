@@ -183,9 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/team", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      const isAdmin = user?.email === "admin@admin.com";
-      const budget = isAdmin ? "1000.0" : "50.0";
+      const userRecord = await storage.getUser(userId);
+      const isAdmin = userRecord?.email === "admin@admin.com";
+      const budget = isAdmin ? 1000.0 : 50.0;
       
       const validation = createTeamSchema.safeParse(req.body);
       if (!validation.success) {
@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const totalCost = players.reduce((sum, p) => sum + parseFloat(p!.price), 0);
-      if (totalCost > 50) {
+      if (totalCost > budget) {
         return res.status(400).json({ message: "Team exceeds budget" });
       }
 
@@ -217,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let team = await storage.getTeamByUserId(userId);
       if (!team) {
-        team = await storage.createTeam({ userId, freeTransfers: 1 });
+        team = await storage.createTeam({ userId, budget: String(budget), freeTransfers: 1 });
       }
 
       await storage.deleteTeamPlayers(team.id);
@@ -233,12 +233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Save team name to user record (one-time only, can't be changed)
-      const user = await storage.getUser(userId);
-      if (user && !user.teamName) {
+      if (userRecord && !userRecord.teamName) {
         await storage.updateUserTeamName(userId, teamName);
       }
 
-      res.json({ success: true, team });
+      res.json({ success: true, team: { ...team, budget } });
     } catch (error) {
       console.error("Error creating/updating team:", error);
       res.status(500).json({ message: "Failed to save team" });

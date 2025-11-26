@@ -31,7 +31,7 @@ import {
 import { Star, Users, TrendingUp, Search, Check, AlertTriangle, MoreVertical, Lock, Repeat } from "lucide-react";
 import type { Team, Player, TeamPlayer, Gameweek, PlayerPerformance } from "@shared/schema";
 
-const BUDGET = 50.0;
+const DEFAULT_BUDGET = 50.0;
 const SQUAD_SIZE = 5;
 const BENCH_SIZE = 1;
 
@@ -316,9 +316,10 @@ export default function MyTeam() {
   };
 
   const squadValidation = validateSquad(selectedPlayers, benchPlayerId);
+  const budget = team?.budget ? parseFloat(String(team.budget)) : DEFAULT_BUDGET;
   const totalBudgetUsed = selectedPlayers.reduce((sum, p) => sum + (parseFloat(String(p.price)) || 0), 0);
-  const budgetRemaining = BUDGET - totalBudgetUsed;
-  const isBudgetValid = totalBudgetUsed <= BUDGET && budgetRemaining >= 0;
+  const budgetRemaining = budget - totalBudgetUsed;
+  const isBudgetValid = totalBudgetUsed <= budget && budgetRemaining >= 0;
   const isSquadComplete = selectedPlayers.length === 6 && captainId && benchPlayerId && squadValidation.isValid && isBudgetValid;
 
   return (
@@ -459,7 +460,7 @@ export default function MyTeam() {
                   <Users className="h-5 w-5" />
                   Build Your Squad ({selectedPlayers.length}/6)
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £50M)</p>
+                <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £{budget.toFixed(1)}M)</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">

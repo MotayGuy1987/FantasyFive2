@@ -835,10 +835,8 @@ export default function MyTeam() {
           {bencedPlayerToSwap && (
             <div className="space-y-4">
               {(() => {
-                // Check which players are locked (only one of their position in starters)
-                const tempBenchId = benchPlayerId === bencedPlayerToSwap.id ? null : bencedPlayerToSwap.id;
-                const validation = validateSquad(selectedPlayers, tempBenchId);
-                const lockedPlayerIds = validation.lockedPlayers;
+                // Allow any position swap as long as position requirements are met
+                const isSwappingPlayerToBench = benchPlayerId === bencedPlayerToSwap.id ? false : true;
                 
                 return (
                   <>
@@ -846,17 +844,27 @@ export default function MyTeam() {
                       .filter(p => p.id !== bencedPlayerToSwap.id)
                       .map((player) => {
                         const isBench = player.id === benchPlayerId;
-                        const isSwappingPlayerToBench = benchPlayerId === bencedPlayerToSwap.id ? false : true;
-                        const positionMatches = player.position === bencedPlayerToSwap.position;
-                        const isLocked = lockedPlayerIds.has(player.id);
                         
-                        // Can't swap if positions don't match, or if trying to move locked player to bench
-                        const canSwap = positionMatches && !(isSwappingPlayerToBench && isLocked);
-                        const disabledReason = !positionMatches 
-                          ? "Different position" 
-                          : (isSwappingPlayerToBench && isLocked)
-                          ? "Can't bench - only one of this position"
-                          : null;
+                        // Simulate the swap to check if position requirements would be met
+                        let tempBenchId: string | null = benchPlayerId;
+                        if (isSwappingPlayerToBench) {
+                          // Moving bencedPlayerToSwap to bench, so player becomes bench
+                          tempBenchId = bencedPlayerToSwap.id;
+                        } else {
+                          // Bringing bencedPlayerToSwap to starters, so player becomes bench
+                          tempBenchId = player.id;
+                        }
+                        
+                        const swappedPlayers = selectedPlayers.map(p => {
+                          if (p.id === bencedPlayerToSwap.id || p.id === player.id) {
+                            return p; // Position stays same, just bench status changes
+                          }
+                          return p;
+                        });
+                        
+                        const validation = validateSquad(swappedPlayers, tempBenchId);
+                        const canSwap = validation.isValid;
+                        const disabledReason = !canSwap ? validation.errors[0] : null;
                         
                         return (
                           <Button
@@ -881,20 +889,11 @@ export default function MyTeam() {
                               <PositionBadge position={player.position} />
                               {player.name}
                               {isBench && <Badge variant="outline" className="text-xs">Current Bench</Badge>}
-                              {isSwappingPlayerToBench && isLocked && <Badge variant="destructive" className="text-xs">Locked</Badge>}
                             </div>
                             <span className="text-xs">£{player.price}M</span>
                           </Button>
                         );
                       })}
-                    {selectedPlayers.some(p => p.id !== bencedPlayerToSwap.id && p.position !== bencedPlayerToSwap.position) && (
-                      <Alert>
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          Can only swap players with the same position ({bencedPlayerToSwap.position})
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </>
                 );
               })()}

@@ -650,15 +650,38 @@ export default function MyTeam() {
                         <span className="font-medium flex-1">{player.name}</span>
                         <span className="text-xs">£{player.price}M</span>
                       </div>
-                      <Button
-                        onClick={() => setSelectedOut(player)}
-                        variant={selectedOut?.id === player.id ? "default" : "outline"}
-                        size="sm"
-                        className={`w-full ${selectedOut?.id === player.id ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}
-                        data-testid={`button-select-out-${player.id}`}
-                      >
-                        {selectedOut?.id === player.id ? 'Transfer Out' : 'Select to Transfer Out'}
-                      </Button>
+                      {selectedOut?.id === player.id ? (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {}}
+                            disabled
+                            size="sm"
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                            data-testid={`button-select-out-${player.id}`}
+                          >
+                            Transfer Out
+                          </Button>
+                          <Button
+                            onClick={() => setSelectedOut(null)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
+                            data-testid={`button-bring-back-${player.id}`}
+                          >
+                            Bring Back
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => setSelectedOut(player)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          data-testid={`button-select-out-${player.id}`}
+                        >
+                          Select to Transfer Out
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -858,14 +881,17 @@ export default function MyTeam() {
                 </div>
               </div>
 
-              {transferCost < 0 && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    This transfer will cost {Math.abs(transferCost)} points
-                  </AlertDescription>
-                </Alert>
-              )}
+              <div className="border rounded-md p-3 bg-muted/50 text-center">
+                {transferCost === 0 ? (
+                  <div className="text-sm font-medium">
+                    {freeTransfers > 1 ? `${freeTransfers - 1}` : '1'} free transfer used, 0 points deducted
+                  </div>
+                ) : (
+                  <div className="text-sm font-medium">
+                    {Math.abs(transferCost)} points deducted
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-3 pt-4">
                 <Button

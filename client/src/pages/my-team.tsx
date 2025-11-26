@@ -447,10 +447,10 @@ export default function MyTeam() {
         )}
       </div>
 
-      <Tabs defaultValue={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} className="space-y-6">
+      <Tabs defaultValue={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} value={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} onValueChange={() => {}} className="space-y-6">
         <TabsList>
           {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
-            <TabsTrigger value="build">Build Team</TabsTrigger>
+            <TabsTrigger value="build">Build First Team</TabsTrigger>
           ) : (
             <>
               <TabsTrigger value="squad">Squad</TabsTrigger>

@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teamPlayers.map(tp => ({
           id: tp.playerId,
           position: tp.player.position,
-          isOnBench: tp.isOnBench,
+          isOnBench: tp.isOnBench ?? false,
         }))
       );
 
@@ -757,6 +757,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const team of allTeamsUpdated) {
         const teamPlayers = await storage.getTeamPlayers(team.id);
+        
+        // Skip scoring if this is the gameweek the team was created in (no advantage)
+        if (team.firstGameweekId === gameweekId) {
+          await storage.upsertGameweekScore({
+            teamId: team.id,
+            gameweekId,
+            points: 0,
+            benchBoostUsed: false,
+            tripleCaptainUsed: false,
+          });
+          continue;
+        }
+        
         let totalPoints = 0;
         let benchBoostUsed = false;
         let tripleCaptainUsed = false;
@@ -832,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Reset free transfers for teams that started in this gameweek (from infinite to 1)
       const allTeams = await storage.getAllTeams();
       for (const t of allTeams) {
-        if (t.firstGameweekId === gameweekId && t.freeTransfers >= 999) {
+        if (t.firstGameweekId === gameweekId && (t.freeTransfers ?? 0) >= 999) {
           await storage.updateTeam(t.id, { freeTransfers: 1 });
         }
       }

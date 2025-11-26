@@ -436,9 +436,9 @@ export default function MyTeam() {
                     disabled={saveSquadMutation.isPending || !teamName.trim() || !isSquadComplete}
                     size="lg"
                     className="w-full mt-2"
-                    data-testid="button-save-squad-main"
+                    data-testid="button-confirm-team"
                   >
-                    {saveSquadMutation.isPending ? "Saving..." : "Save Squad"}
+                    {saveSquadMutation.isPending ? "Confirming..." : "Confirm Team"}
                   </Button>
                 </div>
               </Card>

@@ -340,7 +340,7 @@ export default function MyTeam() {
                   <div className="text-center">
                     <div className="text-xs text-muted-foreground mb-1">Budget Remaining</div>
                     <div className={`text-lg font-bold font-mono ${!isBudgetValid ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>£{budgetRemaining.toFixed(1)}M</div>
-                    <div className="text-xs text-muted-foreground">of £{BUDGET}M</div>
+                    <div className="text-xs text-muted-foreground">of £{budget}M</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xs text-muted-foreground mb-1">Squad</div>

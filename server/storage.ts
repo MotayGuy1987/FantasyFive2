@@ -46,6 +46,7 @@ export interface IStorage {
   getPlayer(id: string): Promise<Player | undefined>;
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayerForm(playerId: string, isInForm: boolean): Promise<void>;
+  updatePlayerPrice(playerId: string, price: string): Promise<void>;
   
   getAllTeams(): Promise<Team[]>;
   getTeamByUserId(userId: string): Promise<Team | undefined>;
@@ -144,6 +145,10 @@ export class DatabaseStorage implements IStorage {
 
   async updatePlayerForm(playerId: string, isInForm: boolean): Promise<void> {
     await db.update(players).set({ isInForm }).where(eq(players.id, playerId));
+  }
+
+  async updatePlayerPrice(playerId: string, price: string): Promise<void> {
+    await db.update(players).set({ price }).where(eq(players.id, playerId));
   }
 
   async getAllTeams(): Promise<Team[]> {

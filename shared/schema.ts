@@ -55,6 +55,7 @@ export const gameweeks = pgTable("gameweeks", {
 export const teams = pgTable("teams", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  budget: decimal("budget", { precision: 5, scale: 1 }).default("50.0"),
   freeTransfers: integer("free_transfers").default(1),
   totalPoints: integer("total_points").default(0),
   createdAt: timestamp("created_at").defaultNow(),

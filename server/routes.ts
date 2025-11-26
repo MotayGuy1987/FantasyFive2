@@ -183,6 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/team", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      const isAdmin = user?.email === "admin@admin.com";
+      const budget = isAdmin ? "1000.0" : "50.0";
       
       const validation = createTeamSchema.safeParse(req.body);
       if (!validation.success) {

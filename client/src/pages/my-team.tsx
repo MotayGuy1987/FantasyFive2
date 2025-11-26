@@ -447,116 +447,70 @@ export default function MyTeam() {
         )}
       </div>
 
-      <Tabs defaultValue="squad" className="space-y-6">
+      <Tabs defaultValue={!existingTeamPlayers || existingTeamPlayers.length === 0 ? "build" : "squad"} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="squad">Squad</TabsTrigger>
-          {existingTeamPlayers && existingTeamPlayers.length > 0 && (
-            <TabsTrigger value="transfers">Transfers</TabsTrigger>
+          {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
+            <TabsTrigger value="build">Build Team</TabsTrigger>
+          ) : (
+            <>
+              <TabsTrigger value="squad">Squad</TabsTrigger>
+              <TabsTrigger value="transfers">Transfers</TabsTrigger>
+            </>
           )}
         </TabsList>
 
-        <TabsContent value="squad" className="space-y-6">
-          {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
-            <>
-              {players && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Build Your Squad ({selectedPlayers.length}/6)
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £{budget.toFixed(1)}M)</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  {[...players].sort((a, b) => {
-                    const aPrice = parseFloat(String(a.price)) || 0;
-                    const bPrice = parseFloat(String(b.price)) || 0;
-                    return bPrice - aPrice;
-                  }).map((player) => {
-                    const isSelected = selectedPlayers.some(p => p.id === player.id);
-                    const isBench = benchPlayerId === player.id;
-                    return (
-                      <Button
-                        key={player.id}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
-                            if (benchPlayerId === player.id) setBenchPlayerId(null);
-                            if (captainId === player.id) setCaptainId(null);
-                          } else if (selectedPlayers.length < 6) {
-                            setSelectedPlayers([...selectedPlayers, player]);
-                          }
-                        }}
-                        variant={isSelected ? "default" : "outline"}
-                        className="w-full justify-start"
-                        data-testid={`button-squad-player-${player.id}`}
-                      >
-                        <PositionBadge position={player.position} />
-                        <span className="ml-2 flex-1 text-left">{player.name}</span>
-                        <span className="text-xs">£{player.price}M</span>
-                        {isSelected && <Check className="h-4 w-4 ml-2" />}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-              )}
-            </>
-          ) : (
-            <>
-              {currentGameweek && gameweekScore && playerPerformances && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Gameweek {currentGameweek.number} Scores</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-center border-b pb-4">
-                  <div className="text-xs text-muted-foreground mb-1">Team Total</div>
-                  <div className="text-3xl font-bold text-primary">{gameweekScore?.points || 0} pts</div>
-                </div>
-                {selectedPlayers.length > 0 && playerPerformances && (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {sortedSelectedPlayers.map((player) => {
-                      const perf = playerPerformances.find(p => p.playerId === player.id);
-                      const isBenched = player.id === benchPlayerId;
+        {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
+          <TabsContent value="build" className="space-y-6">
+            {players && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Build Your Squad ({selectedPlayers.length}/6)
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £{budget.toFixed(1)}M)</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    {[...players].sort((a, b) => {
+                      const aPrice = parseFloat(String(a.price)) || 0;
+                      const bPrice = parseFloat(String(b.price)) || 0;
+                      return bPrice - aPrice;
+                    }).map((player) => {
+                      const isSelected = selectedPlayers.some(p => p.id === player.id);
+                      const isBench = benchPlayerId === player.id;
                       return (
                         <Button
                           key={player.id}
                           onClick={() => {
-                            if (perf) {
-                              setSelectedPlayerPerf({ player, perf });
-                              setPerformanceModalOpen(true);
+                            if (isSelected) {
+                              setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
+                              if (benchPlayerId === player.id) setBenchPlayerId(null);
+                              if (captainId === player.id) setCaptainId(null);
+                            } else if (selectedPlayers.length < 6) {
+                              setSelectedPlayers([...selectedPlayers, player]);
                             }
                           }}
-                          variant="outline"
-                          className="w-full justify-between p-2 h-auto"
-                          data-testid={`button-player-perf-${player.id}`}
+                          variant={isSelected ? "default" : "outline"}
+                          className="w-full justify-start"
+                          data-testid={`button-squad-player-${player.id}`}
                         >
-                          <div className="flex items-center gap-2 flex-1">
-                            <PositionBadge position={player.position} />
-                            <span className="font-medium text-sm">{player.name}</span>
-                            {isBenched && <Badge variant="outline" className="text-xs">Bench</Badge>}
-                          </div>
-                          <div className="font-mono text-sm font-bold text-primary">
-                            {perf?.points || 0} pts
-                          </div>
+                          <PositionBadge position={player.position} />
+                          <span className="ml-2 flex-1 text-left">{player.name}</span>
+                          <span className="text-xs">£{player.price}M</span>
+                          {isSelected && <Check className="h-4 w-4 ml-2" />}
                         </Button>
                       );
                     })}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-              )}
-            </>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Squad ({selectedPlayers.length}/6)</CardTitle>
-            </CardHeader>
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Squad ({selectedPlayers.length}/6)</CardTitle>
+              </CardHeader>
             <CardContent className="space-y-4">
               {sortedSelectedPlayers.map((player) => {
                 const isBench = benchPlayerId === player.id;
@@ -614,7 +568,117 @@ export default function MyTeam() {
               })}
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
+        ) : (
+          <TabsContent value="squad" className="space-y-6">
+            {currentGameweek && gameweekScore && playerPerformances && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gameweek {currentGameweek.number} Scores</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-center border-b pb-4">
+                    <div className="text-xs text-muted-foreground mb-1">Team Total</div>
+                    <div className="text-3xl font-bold text-primary">{gameweekScore?.points || 0} pts</div>
+                  </div>
+                  {selectedPlayers.length > 0 && playerPerformances && (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {sortedSelectedPlayers.map((player) => {
+                        const perf = playerPerformances.find(p => p.playerId === player.id);
+                        const isBenched = player.id === benchPlayerId;
+                        return (
+                          <Button
+                            key={player.id}
+                            onClick={() => {
+                              if (perf) {
+                                setSelectedPlayerPerf({ player, perf });
+                                setPerformanceModalOpen(true);
+                              }
+                            }}
+                            variant="outline"
+                            className="w-full justify-between p-2 h-auto"
+                            data-testid={`button-player-perf-${player.id}`}
+                          >
+                            <div className="flex items-center gap-2 flex-1">
+                              <PositionBadge position={player.position} />
+                              <span className="font-medium text-sm">{player.name}</span>
+                              {isBenched && <Badge variant="outline" className="text-xs">Bench</Badge>}
+                            </div>
+                            <div className="font-mono text-sm font-bold text-primary">
+                              {perf?.points || 0} pts
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Squad ({selectedPlayers.length}/6)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {sortedSelectedPlayers.map((player) => {
+                  const isBench = benchPlayerId === player.id;
+                  const isCaptain = captainId === player.id;
+                  return (
+                    <div
+                      key={player.id}
+                      className={`flex items-center justify-between p-3 rounded-md border ${
+                        isBench 
+                          ? 'bg-blue-500/10 border-blue-500/30 dark:bg-blue-500/15' 
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <PositionBadge position={player.position} />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{player.name}</p>
+                          <p className="text-xs text-muted-foreground">£{player.price}M</p>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          {isBench && <Badge className="bg-blue-600 text-white dark:bg-blue-500">BENCH</Badge>}
+                          {isCaptain && <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"><Star className="h-3 w-3 mr-1" />Captain</Badge>}
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            data-testid={`button-player-menu-${player.id}`}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {!isCaptain && !isBench && (
+                            <>
+                              <DropdownMenuItem onClick={() => updateCaptainMutation.mutate(player.id)}>
+                                <Star className="h-4 w-4 mr-2" />
+                                Make Captain
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          <DropdownMenuItem onClick={() => {
+                            setBencedPlayerToSwap(player);
+                            setSwapDialogOpen(true);
+                          }}>
+                            {isBench ? "Move to Starting XI" : "Move to Bench"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {existingTeamPlayers && existingTeamPlayers.length > 0 && (
         <TabsContent value="transfers" className="space-y-6">

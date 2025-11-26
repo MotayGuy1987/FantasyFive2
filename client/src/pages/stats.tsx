@@ -90,6 +90,7 @@ export default function Stats() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Player</TableHead>
+                    <TableHead className="text-center">Price</TableHead>
                     <TableHead className="text-center">Goals</TableHead>
                     <TableHead className="text-center">Assists</TableHead>
                     <TableHead className="text-center">Yellow</TableHead>
@@ -102,7 +103,7 @@ export default function Stats() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats.map((stat) => (
+                  {[...stats].sort((a, b) => parseFloat(b.player.price) - parseFloat(a.player.price)).map((stat) => (
                     <TableRow key={stat.player.id} data-testid={`stat-row-${stat.player.name.toLowerCase().replace(' ', '-')}`}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -110,6 +111,7 @@ export default function Stats() {
                           <span className="font-medium">{stat.player.name}</span>
                         </div>
                       </TableCell>
+                      <TableCell className="text-center">£{stat.player.price}M</TableCell>
                       <TableCell className="text-center">{stat.goals}</TableCell>
                       <TableCell className="text-center">{stat.assists}</TableCell>
                       <TableCell className="text-center">{stat.yellowCards}</TableCell>

@@ -348,6 +348,16 @@ export class DatabaseStorage implements IStorage {
     const userTeam = await this.getTeamByUserId(userId);
     if (!userTeam) return [];
 
+    // Ensure user is in Overall League
+    const overallLeague = await this.getOrCreateOverallLeague();
+    const isAlreadyMember = await this.isTeamInLeague(userTeam.id, overallLeague.id);
+    if (!isAlreadyMember) {
+      await this.addLeagueMember({
+        leagueId: overallLeague.id,
+        teamId: userTeam.id,
+      });
+    }
+
     const results = await db
       .select()
       .from(leagueMembers)

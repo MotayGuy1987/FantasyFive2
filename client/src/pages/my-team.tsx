@@ -449,14 +449,79 @@ export default function MyTeam() {
 
       {!existingTeamPlayers || existingTeamPlayers.length === 0 ? (
         <div className="space-y-6">
+            {/* Squad Overview Card - Always Visible */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Squad Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 rounded-md bg-muted text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Players Selected</div>
+                    <div className="text-2xl font-bold text-primary">{selectedPlayers.length}/6</div>
+                  </div>
+                  <div className="p-3 rounded-md bg-muted text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Budget Remaining</div>
+                    <div className="text-2xl font-bold text-primary">£{budget.toFixed(1)}M</div>
+                  </div>
+                  <div className="p-3 rounded-md bg-muted text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Captain</div>
+                    <div className="text-lg font-bold font-mono">{captainId ? "✓" : "–"}</div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="text-sm font-medium mb-3">Position Requirements (Starters)</div>
+                  <div className="flex gap-2">
+                    <div className={`flex-1 p-3 rounded-md text-center ${squadValidation.positionCounts.Defender >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground mb-1">DEF</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.Defender >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Defender}
+                      </div>
+                      <div className="text-xs text-muted-foreground">/1 min</div>
+                    </div>
+                    <div className={`flex-1 p-3 rounded-md text-center ${squadValidation.positionCounts.Midfielder >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground mb-1">MID</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.Midfielder >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Midfielder}
+                      </div>
+                      <div className="text-xs text-muted-foreground">/1 min</div>
+                    </div>
+                    <div className={`flex-1 p-3 rounded-md text-center ${squadValidation.positionCounts.Forward >= 1 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <div className="text-xs text-muted-foreground mb-1">FWD</div>
+                      <div className={`text-2xl font-bold ${squadValidation.positionCounts.Forward >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {squadValidation.positionCounts.Forward}
+                      </div>
+                      <div className="text-xs text-muted-foreground">/1 min</div>
+                    </div>
+                  </div>
+
+                  {squadValidation.errors.length > 0 && selectedPlayers.length > 0 && (
+                    <Alert variant="destructive" className="mt-3">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        <ul className="list-disc list-inside space-y-1">
+                          {squadValidation.errors.map((error, idx) => (
+                            <li key={idx} className="text-xs">{error}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {players && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Build Your Squad ({selectedPlayers.length}/6)
+                    Available Players
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">Select 5 starters and 1 bench player (Budget: £{budget.toFixed(1)}M)</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">

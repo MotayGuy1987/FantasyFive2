@@ -254,8 +254,8 @@ export default function Home() {
                   <p className="text-sm text-muted-foreground">N/A</p>
                 ) : (
                   <>
-                    <p className="text-lg font-bold">{teamOfWeek.team.teamName}</p>
-                    <p className="text-xs text-muted-foreground">{teamOfWeek.user?.firstName || "Manager"}</p>
+                    <p className="text-lg font-bold">{teamOfWeek.user?.firstName || "Team"}</p>
+                    <p className="text-xs text-muted-foreground">{teamOfWeek.user?.email}</p>
                     <p className="text-xs text-muted-foreground mt-1">{teamOfWeek.points} points</p>
                   </>
                 )}

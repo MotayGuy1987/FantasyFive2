@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ShieldCheck, Plus } from "lucide-react";
+import { ShieldCheck, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import type { Player, Gameweek } from "@shared/schema";
 
@@ -47,6 +47,7 @@ export default function Admin() {
   const [selectedGameweek, setSelectedGameweek] = useState<string>("");
   const [newGameweekNumber, setNewGameweekNumber] = useState("");
   const [performances, setPerformances] = useState<Record<string, PerformanceData>>({});
+  const [priceChanges, setPriceChanges] = useState<Record<string, number>>({});
 
   const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
 
@@ -123,20 +124,21 @@ export default function Admin() {
   });
 
   const submitPerformancesMutation = useMutation({
-    mutationFn: async (data: { gameweekId: string; performances: PerformanceData[] }) => {
+    mutationFn: async (data: { gameweekId: string; performances: PerformanceData[]; priceChanges: Record<string, number> }) => {
       await apiRequest("POST", "/api/admin/performances", data);
     },
     onSuccess: () => {
-      // Invalidate all caches to ensure all users see updated scores
       queryClient.invalidateQueries({ queryKey: ["/api/gameweeks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/team"] });
       queryClient.invalidateQueries({ queryKey: ["/api/team/gameweek-score"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/players"] });
       toast({
         title: "Success",
-        description: "Performances submitted successfully! All managers are seeing the updated scores.",
+        description: "Changes confirmed! Performances and prices updated.",
       });
       setPerformances({});
+      setPriceChanges({});
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -284,7 +286,15 @@ export default function Admin() {
     submitPerformancesMutation.mutate({
       gameweekId: selectedGameweek,
       performances: performancesArray,
+      priceChanges,
     });
+  };
+
+  const adjustPrice = (playerId: string, delta: number) => {
+    setPriceChanges((prev) => ({
+      ...prev,
+      [playerId]: (prev[playerId] || 0) + delta,
+    }));
   };
 
   const handleCreateGameweek = () => {
@@ -415,7 +425,33 @@ export default function Admin() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <PositionBadge position={player.position} />
-                          <span className="font-medium">{player.name}</span>
+                          <div>
+                            <div className="font-medium">{player.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              £{(parseFloat(player.price) + (priceChanges[player.id] || 0)).toFixed(1)}M
+                              {priceChanges[player.id] ? ` (${priceChanges[player.id] > 0 ? '+' : ''}${priceChanges[player.id].toFixed(1)})` : ''}
+                            </div>
+                          </div>
+                          <div className="flex gap-1 ml-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => adjustPrice(player.id, -0.1)}
+                              className="h-6 w-6"
+                              data-testid={`button-price-down-${player.id}`}
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => adjustPrice(player.id, 0.1)}
+                              className="h-6 w-6"
+                              data-testid={`button-price-up-${player.id}`}
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -510,9 +546,9 @@ export default function Admin() {
                 disabled={submitPerformancesMutation.isPending}
                 className="w-full"
                 size="lg"
-                data-testid="button-submit-performances"
+                data-testid="button-confirm-changes"
               >
-                {submitPerformancesMutation.isPending ? "Submitting..." : "Submit Performances"}
+                {submitPerformancesMutation.isPending ? "Confirming..." : "Confirm Changes"}
               </Button>
               <Button
                 onClick={() => {

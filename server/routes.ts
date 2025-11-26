@@ -46,6 +46,7 @@ const submitPerformancesSchema = z.object({
     penaltiesMissed: z.number().int().min(0),
     goalsConceded: z.number().int().min(0),
   })),
+  priceChanges: z.record(z.string(), z.number()).optional(),
 });
 
 const activateChipSchema = z.object({
@@ -762,11 +763,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid performance data", errors: validation.error.errors });
       }
       
-      const { gameweekId, performances } = validation.data;
+      const { gameweekId, performances, priceChanges } = validation.data;
       const gameweek = await storage.getGameweek(gameweekId);
       
       if (!gameweek) {
         return res.status(404).json({ message: "Gameweek not found" });
+      }
+
+      // Update player prices if provided
+      if (priceChanges) {
+        for (const [playerId, priceDelta] of Object.entries(priceChanges)) {
+          const player = await storage.getPlayer(playerId);
+          if (player) {
+            const newPrice = (parseFloat(player.price) + priceDelta).toFixed(1);
+            await storage.updatePlayerPrice(playerId, newPrice);
+          }
+        }
       }
 
       for (const perf of performances) {

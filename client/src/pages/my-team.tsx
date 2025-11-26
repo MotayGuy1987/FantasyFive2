@@ -134,8 +134,6 @@ export default function MyTeam() {
       if (captain) setCaptainId(captain.playerId);
       const bench = existingTeamPlayers.find(tp => tp.isOnBench);
       if (bench) setBenchPlayerId(bench.playerId);
-      const teamName = team?.teamName;
-      if (teamName) setTeamName(teamName);
     }
   }, [existingTeamPlayers, team]);
 
@@ -303,7 +301,7 @@ export default function MyTeam() {
     return bPrice - aPrice;
   });
 
-  const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut.position, selectedIn.position, teamPlayersData) : null;
+  const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut, selectedIn, selectedPlayers, benchPlayerId) : null;
   const canMakeTransfer = selectedOut && selectedIn && currentGameweek && (transferValidation?.canTransfer ?? true);
 
   const handleConfirmTransfer = () => {
@@ -926,7 +924,7 @@ export default function MyTeam() {
                   
                   return (
                     <>
-                      {selectedPlayerPerf.perf.goals > 0 && (
+                      {(selectedPlayerPerf.perf.goals ?? 0) > 0 && (
                         <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                           <div>
                             <div className="text-sm font-medium">Goals</div>
@@ -935,7 +933,7 @@ export default function MyTeam() {
                           <div className="font-mono font-bold text-primary">+{breakdown.goals}</div>
                         </div>
                       )}
-                      {selectedPlayerPerf.perf.assists > 0 && (
+                      {(selectedPlayerPerf.perf.assists ?? 0) > 0 && (
                         <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                           <div>
                             <div className="text-sm font-medium">Assists</div>
@@ -944,7 +942,7 @@ export default function MyTeam() {
                           <div className="font-mono font-bold text-primary">+{breakdown.assists}</div>
                         </div>
                       )}
-                      {selectedPlayerPerf.perf.yellowCards > 0 && (
+                      {(selectedPlayerPerf.perf.yellowCards ?? 0) > 0 && (
                         <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                           <div>
                             <div className="text-sm font-medium">Yellow Cards</div>
@@ -953,7 +951,7 @@ export default function MyTeam() {
                           <div className="font-mono font-bold text-destructive">{breakdown.yellowCards}</div>
                         </div>
                       )}
-                      {selectedPlayerPerf.perf.redCards > 0 && (
+                      {(selectedPlayerPerf.perf.redCards ?? 0) > 0 && (
                         <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                           <div>
                             <div className="text-sm font-medium">Red Cards</div>

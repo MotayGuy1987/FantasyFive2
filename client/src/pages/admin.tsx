@@ -158,6 +158,37 @@ export default function Admin() {
     },
   });
 
+  const activateGameweekMutation = useMutation({
+    mutationFn: async (gameweekId: string) => {
+      await apiRequest("POST", "/api/admin/activate-gameweek", { gameweekId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gameweeks"] });
+      toast({
+        title: "Success",
+        description: "Gameweek activated!",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const endGameweekMutation = useMutation({
     mutationFn: async (gameweekId: string) => {
       await apiRequest("POST", "/api/admin/end-gameweek", { gameweekId });
@@ -327,20 +358,32 @@ export default function Admin() {
           <CardHeader>
             <CardTitle>Select Gameweek</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Label htmlFor="select-gameweek">Gameweek</Label>
-            <Select value={selectedGameweek} onValueChange={setSelectedGameweek}>
-              <SelectTrigger id="select-gameweek" data-testid="select-gameweek">
-                <SelectValue placeholder="Select gameweek" />
-              </SelectTrigger>
-              <SelectContent>
-                {gameweeks && Array.isArray(gameweeks) && gameweeks.map((gw: Gameweek) => (
-                  <SelectItem key={gw.id} value={gw.id} data-testid={`option-gameweek-${gw.number}`}>
-                    Gameweek {gw.number} {gw.isActive ? "(Active)" : gw.isCompleted ? "(Completed)" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="select-gameweek">Gameweek</Label>
+              <Select value={selectedGameweek} onValueChange={setSelectedGameweek}>
+                <SelectTrigger id="select-gameweek" data-testid="select-gameweek">
+                  <SelectValue placeholder="Select gameweek" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gameweeks && Array.isArray(gameweeks) && gameweeks.map((gw: Gameweek) => (
+                    <SelectItem key={gw.id} value={gw.id} data-testid={`option-gameweek-${gw.number}`}>
+                      Gameweek {gw.number} {gw.isActive ? "(Active)" : gw.isCompleted ? "(Completed)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedGameweek && (
+              <Button
+                onClick={() => activateGameweekMutation.mutate(selectedGameweek)}
+                disabled={activateGameweekMutation.isPending}
+                className="w-full"
+                data-testid="button-activate-gameweek"
+              >
+                {activateGameweekMutation.isPending ? "Activating..." : "Activate Gameweek"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

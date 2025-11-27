@@ -77,7 +77,7 @@ export default function Leagues() {
   });
 
   const { data: myLeagues } = useQuery<League[]>({
-    queryKey: ["/api/leagues/my-leagues"],
+    queryKey: ["/api/leagues"],
     enabled: isAuthenticated && !!team,
   });
 
@@ -95,7 +95,7 @@ export default function Leagues() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/leagues/my-leagues"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       setCreateDialogOpen(false);
       setNewLeagueName("");
       toast({
@@ -128,7 +128,7 @@ export default function Leagues() {
       await apiRequest("POST", "/api/leagues/join", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/leagues/my-leagues"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       setJoinDialogOpen(false);
       setJoinCode("");
       toast({
@@ -161,7 +161,7 @@ export default function Leagues() {
       await apiRequest("DELETE", `/api/leagues/${leagueId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/leagues/my-leagues"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       setSelectedLeagueId(null);
       toast({
         title: "Success",

@@ -38,7 +38,8 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
     if (teamPopoverOpen) {
       setTimeout(() => {
         teamInputRef.current?.focus();
-      }, 0);
+        teamInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
     }
   }, [teamPopoverOpen]);
 

@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2, Edit, Download, Copy } from "lucide-react";
+import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2, Edit } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import type { Player, Gameweek, Team, User } from "@shared/schema";
 
@@ -57,12 +57,11 @@ export default function Admin() {
   const [newGameweekNumber, setNewGameweekNumber] = useState("");
   const [performances, setPerformances] = useState<Record<string, PerformanceData>>({});
   const [priceChanges, setPriceChanges] = useState<Record<string, number>>({});
-  const [adminTab, setAdminTab] = useState<"gameweeks" | "teams-users" | "account-save">("gameweeks");
+  const [adminTab, setAdminTab] = useState<"gameweeks" | "teams-users">("gameweeks");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingUsername, setEditingUsername] = useState<string>("");
   const [pendingDeleteTeamId, setPendingDeleteTeamId] = useState<string | null>(null);
   const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
-  const [tempPasswords, setTempPasswords] = useState<Record<string, string>>({});
 
   const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
 
@@ -284,30 +283,6 @@ export default function Admin() {
     },
   });
 
-  const resetPasswordMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const res = await apiRequest("POST", `/api/admin/user/${userId}/reset-password`, {});
-      return { ...res, userId };
-    },
-    onSuccess: (data: any) => {
-      setTempPasswords((prev) => ({
-        ...prev,
-        [data.userId]: data.temporaryPassword,
-      }));
-      toast({
-        title: "Success",
-        description: "Temporary password generated. Copy and share with user.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const updateUsernameMutation = useMutation({
     mutationFn: async ({ userId, username }: { userId: string; username: string }) => {
       await apiRequest("PATCH", `/api/admin/user/${userId}/username`, { username });
@@ -457,13 +432,6 @@ export default function Admin() {
           data-testid="button-admin-teams-users-tab"
         >
           Teams & Users
-        </Button>
-        <Button
-          variant={adminTab === "account-save" ? "default" : "outline"}
-          onClick={() => setAdminTab("account-save")}
-          data-testid="button-admin-account-save-tab"
-        >
-          Account Save
         </Button>
       </div>
 
@@ -878,83 +846,6 @@ export default function Admin() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
-
-      {adminTab === "account-save" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Save - All User Credentials</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {teamsUsers?.users && teamsUsers.users.length > 0 ? (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamsUsers.users.map((u) => (
-                        <TableRow key={u.id}>
-                          <TableCell className="font-mono text-sm">{u.username || "(no username)"}</TableCell>
-                          <TableCell className="font-mono text-sm">{u.email || "N/A"}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => resetPasswordMutation.mutate(u.id)}
-                                disabled={resetPasswordMutation.isPending || u.email === "admin@admin.com"}
-                                data-testid={`button-reset-password-${u.id}`}
-                              >
-                                Reset Password
-                              </Button>
-                              {tempPasswords[u.id] && (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-sm">
-                                  <code>{tempPasswords[u.id]}</code>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-5 w-5"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(tempPasswords[u.id]);
-                                      toast({
-                                        title: "Copied",
-                                        description: "Temporary password copied to clipboard",
-                                      });
-                                    }}
-                                    data-testid={`button-copy-password-${u.id}`}
-                                  >
-                                    <Copy className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="mt-4 p-4 bg-muted rounded text-sm">
-                  <p className="font-semibold mb-2">How to use:</p>
-                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Click "Reset Password" to generate a temporary password for any user</li>
-                    <li>Copy the temporary password and share it with the user securely</li>
-                    <li>User can login with their username/email and the temporary password</li>
-                    <li>User should change their password after logging in</li>
-                  </ul>
-                </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground">No users found</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       <AlertDialog open={!!pendingDeleteUserId} onOpenChange={(open) => !open && setPendingDeleteUserId(null)}>
         <AlertDialogContent>

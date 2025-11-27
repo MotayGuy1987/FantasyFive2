@@ -148,50 +148,50 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4 space-y-2">
         {userData && (
-          <div className="flex items-center gap-3 rounded-md p-2 hover-elevate border border-muted-foreground/30">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setProfileOpen(true)}
-              className="cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 flex-1 rounded-md p-2 hover-elevate border border-muted-foreground/30 cursor-pointer"
               data-testid="button-profile-customize"
             >
               {userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam] ? (
                 <img
                   src={TEAM_LOGOS[userData.favoriteTeam]}
                   alt={userData.favoriteTeam}
-                  className="h-8 w-8 rounded-full object-contain"
+                  className="h-8 w-8 rounded-full object-contain flex-shrink-0"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
               ) : (
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarFallback>
                     <span>{userData.firstName?.[0] || userData.email?.[0] || 'U'}</span>
                   </AvatarFallback>
                 </Avatar>
               )}
-            </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {userData.firstName || userData.email || 'User'}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {userData.firstName || userData.email || 'User'}
+                  </p>
+                  {userData.nationality && COUNTRY_FLAGS[userData.nationality] && (
+                    <span className="text-base flex-shrink-0">
+                      {COUNTRY_FLAGS[userData.nationality]}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {userData.teamName || 'No team yet'}
                 </p>
-                {userData.nationality && COUNTRY_FLAGS[userData.nationality] && (
-                  <span className="text-base flex-shrink-0">
-                    {COUNTRY_FLAGS[userData.nationality]}
-                  </span>
-                )}
               </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {userData.teamName || 'No team yet'}
-              </p>
-            </div>
+            </button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSettingsOpen(true)}
               data-testid="button-settings"
-              className="h-8 w-8"
+              className="h-8 w-8 flex-shrink-0"
             >
               <Settings className="h-4 w-4" />
             </Button>

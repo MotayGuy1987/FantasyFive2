@@ -57,6 +57,8 @@ export interface IStorage {
   getTeamByUserId(userId: string): Promise<Team | undefined>;
   createTeam(team: InsertTeam): Promise<Team>;
   updateTeam(teamId: string, data: Partial<Team>): Promise<Team>;
+  deleteTeam(teamId: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
   
   getTeamPlayers(teamId: string): Promise<(TeamPlayer & { player: Player })[]>;
   createTeamPlayer(teamPlayer: InsertTeamPlayer): Promise<TeamPlayer>;
@@ -548,6 +550,32 @@ export class DatabaseStorage implements IStorage {
     const percentage = (maxCount / totalTeams) * 100;
     
     return { players, count: maxCount, percentage };
+  }
+
+  async deleteTeam(teamId: string): Promise<void> {
+    // Delete team players
+    await db.delete(teamPlayers).where(eq(teamPlayers.teamId, teamId));
+    // Delete transfers
+    await db.delete(transfers).where(eq(transfers.teamId, teamId));
+    // Delete chips
+    await db.delete(chips).where(eq(chips.teamId, teamId));
+    // Delete gameweek scores
+    await db.delete(gameweekScores).where(eq(gameweekScores.teamId, teamId));
+    // Delete league memberships
+    await db.delete(leagueMembers).where(eq(leagueMembers.teamId, teamId));
+    // Delete team
+    await db.delete(teams).where(eq(teams.id, teamId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Get user's team
+    const [team] = await db.select().from(teams).where(eq(teams.userId, userId));
+    // Delete team if exists
+    if (team) {
+      await this.deleteTeam(team.id);
+    }
+    // Delete user
+    await db.delete(users).where(eq(users.id, userId));
   }
 }
 

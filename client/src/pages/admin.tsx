@@ -25,9 +25,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ShieldCheck, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
-import type { Player, Gameweek } from "@shared/schema";
+import type { Player, Gameweek, Team, User } from "@shared/schema";
 
 interface PerformanceData {
   playerId: string;
@@ -48,6 +48,7 @@ export default function Admin() {
   const [newGameweekNumber, setNewGameweekNumber] = useState("");
   const [performances, setPerformances] = useState<Record<string, PerformanceData>>({});
   const [priceChanges, setPriceChanges] = useState<Record<string, number>>({});
+  const [adminTab, setAdminTab] = useState<"gameweeks" | "teams-users">("gameweeks");
 
   const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
 
@@ -89,6 +90,11 @@ export default function Admin() {
   const { data: existingPerformances } = useQuery<(any & { player: Player })[]>({
     queryKey: ["/api/gameweek", selectedGameweek, "player-performances"],
     enabled: isAuthenticated && !!isAdmin && !!selectedGameweek,
+  });
+
+  const { data: teamsUsers } = useQuery<{ teams: (Team & { user?: User })[]; users: User[] }>({
+    queryKey: ["/api/admin/teams-users"],
+    enabled: isAuthenticated && !!isAdmin && adminTab === "teams-users",
   });
 
   const createGameweekMutation = useMutation({
@@ -224,6 +230,46 @@ export default function Admin() {
     },
   });
 
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (teamId: string) => {
+      await apiRequest("DELETE", `/api/admin/team/${teamId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/teams-users"] });
+      toast({
+        title: "Success",
+        description: "Team deleted successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest("DELETE", `/api/admin/user/${userId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/teams-users"] });
+      toast({
+        title: "Success",
+        description: "User deleted successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (players && Array.isArray(players) && selectedGameweek) {
       const initialPerformances: Record<string, PerformanceData> = {};
@@ -333,11 +379,30 @@ export default function Admin() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">Admin Panel</h1>
-          <p className="text-muted-foreground">Manage gameweeks and player performances</p>
+          <p className="text-muted-foreground">Manage gameweeks, teams, and users</p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant={adminTab === "gameweeks" ? "default" : "outline"}
+          onClick={() => setAdminTab("gameweeks")}
+          data-testid="button-admin-gameweeks-tab"
+        >
+          Gameweeks
+        </Button>
+        <Button
+          variant={adminTab === "teams-users" ? "default" : "outline"}
+          onClick={() => setAdminTab("teams-users")}
+          data-testid="button-admin-teams-users-tab"
+        >
+          Teams & Users
+        </Button>
+      </div>
+
+      {adminTab === "gameweeks" && (
+        <>
+          <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Create Gameweek</CardTitle>
@@ -398,9 +463,9 @@ export default function Admin() {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
 
-      <Card>
+          <Card>
         <CardHeader>
           <CardTitle>
             {selectedGameweek
@@ -587,8 +652,96 @@ export default function Admin() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        </>
+      )}
+
+      {adminTab === "teams-users" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Teams Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {teamsUsers?.teams && teamsUsers.teams.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Team Name</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Budget</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {teamsUsers.teams.map((team) => (
+                      <TableRow key={team.id}>
+                        <TableCell>{team.user?.teamName || "N/A"}</TableCell>
+                        <TableCell>{team.user?.username || "N/A"}</TableCell>
+                        <TableCell>£{parseFloat(team.budget).toFixed(1)}M</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteTeamMutation.mutate(team.id)}
+                            disabled={deleteTeamMutation.isPending}
+                            data-testid={`button-delete-team-${team.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-muted-foreground">No teams found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Users Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {teamsUsers?.users && teamsUsers.users.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {teamsUsers.users.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell>{u.username}</TableCell>
+                        <TableCell>{u.email || "N/A"}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteUserMutation.mutate(u.id)}
+                            disabled={deleteUserMutation.isPending || u.email === "admin@admin.com"}
+                            data-testid={`button-delete-user-${u.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-muted-foreground">No users found</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

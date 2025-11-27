@@ -872,6 +872,73 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/teams-users", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const teams = await storage.getAllTeams();
+      const allUsers = await db.select().from(users);
+      
+      const teamsWithUsers = await Promise.all(
+        teams.map(async (team) => {
+          const user = await storage.getUser(team.userId);
+          return { ...team, user };
+        })
+      );
+
+      res.json({ teams: teamsWithUsers, users: allUsers });
+    } catch (error) {
+      console.error("Error fetching teams/users:", error);
+      res.status(500).json({ message: "Failed to fetch teams/users" });
+    }
+  });
+
+  app.delete("/api/admin/team/:teamId", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { teamId } = req.params;
+      if (!teamId) {
+        return res.status(400).json({ message: "teamId is required" });
+      }
+
+      await storage.deleteTeam(teamId);
+      res.json({ success: true, message: "Team deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      res.status(500).json({ message: "Failed to delete team" });
+    }
+  });
+
+  app.delete("/api/admin/user/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { userId } = req.params;
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      // Don't allow deleting admin
+      const user = await storage.getUser(userId);
+      if (user?.email === "admin@admin.com") {
+        return res.status(400).json({ message: "Cannot delete admin user" });
+      }
+
+      await storage.deleteUser(userId);
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

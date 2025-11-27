@@ -35,6 +35,11 @@ const baseMenuItems = [
     icon: Home,
   },
   {
+    title: "Transfers",
+    url: "/transfers",
+    icon: Repeat,
+  },
+  {
     title: "Leagues",
     url: "/leagues",
     icon: Trophy,
@@ -73,6 +78,7 @@ export function AppSidebar() {
     teamMenuItem,
     baseMenuItems[1],
     baseMenuItems[2],
+    baseMenuItems[3],
   ];
   
   const handleLogout = async () => {

@@ -11,6 +11,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import MyTeam from "@/pages/my-team";
+import Transfers from "@/pages/transfers";
 import Leagues from "@/pages/leagues";
 import Admin from "@/pages/admin";
 import Stats from "@/pages/stats";
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/build-first-team" component={MyTeam} />
       <Route path="/my-team" component={MyTeam} />
+      <Route path="/transfers" component={Transfers} />
       <Route path="/leagues" component={Leagues} />
       <Route path="/stats" component={Stats} />
       <Route path="/admin" component={Admin} />

@@ -334,9 +334,14 @@ export async function registerRoutes(app: Express) {
         allPerformances.push(...perfs);
       }
 
+      console.log(`Fetched ${allGameweeks.length} gameweeks, ${allPlayers.length} players, ${allPerformances.length} performances`);
+
       const statsMap: Record<string, any> = {};
       allPlayers.forEach((player) => {
-        const playerPerfs = allPerformances.filter((p) => p.playerId === player.id);
+        const playerPerfs = allPerformances.filter((p) => {
+          const matches = p.playerId === player.id || (p.player && p.player.id === player.id);
+          return matches;
+        });
         statsMap[player.id] = {
           player,
           goals: playerPerfs.reduce((sum, p) => sum + (p.goals || 0), 0),

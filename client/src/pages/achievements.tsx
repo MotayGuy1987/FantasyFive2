@@ -153,20 +153,24 @@ export default function Achievements() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedDetails.map((detail, index) => (
-                    <TableRow key={`${detail.player.id}-${index}`}>
-                      <TableCell className="font-semibold">
-                        #{index + 1}
-                      </TableCell>
-                      <TableCell className="font-medium">{detail.player.name}</TableCell>
-                      <TableCell>
-                        <PositionBadge position={detail.player.position} />
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-primary">
-                        {detail.value}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {selectedDetails.map((detail, index) => {
+                    const uniqueValues = [...new Set(selectedDetails.map(d => d.value))].sort((a, b) => b - a);
+                    const rank = uniqueValues.indexOf(detail.value) + 1;
+                    return (
+                      <TableRow key={`${detail.player.id}-${index}`}>
+                        <TableCell className="font-semibold">
+                          #{rank}
+                        </TableCell>
+                        <TableCell className="font-medium">{detail.player.name}</TableCell>
+                        <TableCell>
+                          <PositionBadge position={detail.player.position} />
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-primary">
+                          {detail.value}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

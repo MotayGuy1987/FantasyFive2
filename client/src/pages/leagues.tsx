@@ -87,7 +87,7 @@ export default function Leagues() {
   const { data: leaderboard } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leagues", selectedLeagueId, "leaderboard"],
     enabled: !!selectedLeagueId,
-    staleTime: 5000, // Data is fresh for 5 seconds
+    staleTime: 0, // Always fetch fresh data
     refetchInterval: 10000, // Refetch every 10 seconds for live updates
     refetchIntervalInBackground: true,
   });

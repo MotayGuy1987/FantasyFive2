@@ -51,6 +51,7 @@ export default function Leagues() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [newLeagueName, setNewLeagueName] = useState("");
+  const [newLeagueCode, setNewLeagueCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -93,7 +94,7 @@ export default function Leagues() {
   });
 
   const createLeagueMutation = useMutation({
-    mutationFn: async (data: { name: string }) => {
+    mutationFn: async (data: { name: string; joinCode: string }) => {
       const response = await apiRequest("POST", "/api/leagues", data);
       return response;
     },
@@ -101,6 +102,7 @@ export default function Leagues() {
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       setCreateDialogOpen(false);
       setNewLeagueName("");
+      setNewLeagueCode("");
       toast({
         title: "Success",
         description: "League created successfully!",
@@ -191,6 +193,11 @@ export default function Leagues() {
     },
   });
 
+  const generateLeagueCode = () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setNewLeagueCode(code);
+  };
+
   const handleCreateLeague = () => {
     if (!newLeagueName.trim()) {
       toast({
@@ -200,7 +207,15 @@ export default function Leagues() {
       });
       return;
     }
-    createLeagueMutation.mutate({ name: newLeagueName });
+    if (!newLeagueCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please generate a league code",
+        variant: "destructive",
+      });
+      return;
+    }
+    createLeagueMutation.mutate({ name: newLeagueName, joinCode: newLeagueCode });
   };
 
   const handleJoinLeague = () => {
@@ -293,9 +308,33 @@ export default function Leagues() {
                     data-testid="input-league-name"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="league-code">Join Code</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="league-code"
+                      placeholder="Generate a code"
+                      value={newLeagueCode}
+                      onChange={(e) => setNewLeagueCode(e.target.value.toUpperCase())}
+                      maxLength={10}
+                      data-testid="input-league-code"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={generateLeagueCode}
+                      data-testid="button-generate-code"
+                    >
+                      Generate
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Generate a random code or enter your own
+                  </p>
+                </div>
                 <Button
                   onClick={handleCreateLeague}
-                  disabled={createLeagueMutation.isPending}
+                  disabled={createLeagueMutation.isPending || !newLeagueCode.trim()}
                   className="w-full"
                   data-testid="button-submit-create-league"
                 >

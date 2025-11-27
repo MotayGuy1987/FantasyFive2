@@ -520,13 +520,22 @@ export async function registerRoutes(app: Express) {
   app.post("/api/leagues", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { name } = req.body;
+      const { name, joinCode } = req.body;
 
       if (!name) {
         return res.status(400).json({ message: "League name is required" });
       }
 
-      const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      if (!joinCode) {
+        return res.status(400).json({ message: "Join code is required" });
+      }
+
+      // Validate join code is unique
+      const existingLeague = await storage.getLeagueByCode(joinCode);
+      if (existingLeague) {
+        return res.status(400).json({ message: "This join code is already taken" });
+      }
+
       const league = await storage.createLeague({
         name,
         joinCode,

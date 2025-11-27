@@ -53,12 +53,19 @@ export async function setupAuth(app: Express) {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+        return res.status(400).json({ message: "Username/email and password are required" });
       }
 
-      const user = await storage.getUserByUsername(username);
+      // Check if input is an email or username
+      let user;
+      if (username.includes("@")) {
+        user = await storage.getUserByEmail(username);
+      } else {
+        user = await storage.getUserByUsername(username);
+      }
+
       if (!user || !verifyPassword(password, user.password)) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: "Invalid username/email or password" });
       }
 
       (req.session as any).userId = user.id;

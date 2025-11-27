@@ -600,7 +600,7 @@ export async function registerRoutes(app: Express) {
           
           return {
             rank: 0,
-            teamName: member.team.name,
+            teamName: member.user.teamName,
             totalPoints,
             gameweekPoints,
             userId: member.user.id,

@@ -133,6 +133,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const { avatarPersonColor, avatarBgColor, nationality, favoriteTeam } = req.body;
+      const userId = req.user.id;
+
+      const updatedUser = await storage.updateUserProfile(userId, {
+        avatarPersonColor,
+        avatarBgColor,
+        nationality,
+        favoriteTeam,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.get('/api/user/team-name-cooldown', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const canEdit = await storage.canEditTeamName(userId);
+      res.json({ canEdit });
+    } catch (error) {
+      console.error("Error checking team name cooldown:", error);
+      res.status(500).json({ message: "Failed to check cooldown" });
+    }
+  });
+
   app.get("/api/players", isAuthenticated, async (req, res) => {
     try {
       const players = await storage.getAllPlayers();

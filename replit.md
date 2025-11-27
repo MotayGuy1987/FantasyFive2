@@ -8,6 +8,18 @@ Fantasy Mini League is a 5-a-side fantasy football mini-game inspired by Fantasy
 
 Preferred communication style: Simple, everyday language.
 
+## Latest Changes (Nov 27, 2025)
+
+**Profile Customization & Team Name Cooldown**
+- Added avatar customization: users can now choose person color and background color from 8 color options
+- Added nationality selection (190+ countries available)
+- Added favorite soccer team selection (50+ major European teams)
+- Implemented 7-day cooldown on team name edits - users can only change team name once per week
+- Profile customization dialog opens when clicking on avatar in sidebar
+- New schema fields in users table: `avatarPersonColor`, `avatarBgColor`, `nationality`, `favoriteTeam`, `lastTeamNameEditAt`
+- New API endpoints: `PATCH /api/user/profile` and `GET /api/user/team-name-cooldown`
+- New storage methods: `updateUserProfile()` and `canEditTeamName()` with 7-day calculation
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -48,6 +60,7 @@ Preferred communication style: Simple, everyday language.
 - Express-session with `connect-pg-simple` for persistent session storage
 - Protected routes using `isAuthenticated` middleware
 - Admin role detection based on email (`admin@admin.com`)
+- Username-based login (email optional)
 
 **Business Logic**
 - Position validation system enforcing 5-a-side formation rules:
@@ -62,6 +75,7 @@ Preferred communication style: Simple, everyday language.
   - Captain multiplier: 2x points
 - Transfer system with free transfers per gameweek and -2 point penalties
 - Chip system (Triple Captain, Bench Boost, Free Hit)
+- Profile customization with cooldown timers
 
 **API Design**
 - RESTful endpoints organized by resource type (`/api/team`, `/api/players`, `/api/gameweeks`, etc.)
@@ -78,7 +92,7 @@ Preferred communication style: Simple, everyday language.
 
 **Database Schema**
 Core tables:
-- `users` - User accounts with authentication credentials
+- `users` - User accounts with authentication credentials + profile fields (avatar colors, nationality, favorite team, last edit timestamp)
 - `players` - Available players with pricing and form status
 - `teams` - User teams with budget and total points
 - `team_players` - Many-to-many relationship with captain/bench flags
@@ -139,12 +153,15 @@ Core tables:
 - 12 Team Players (6 per team with captain flags)
 - 1 Gameweek Score recorded
 - 5 Player Performances with match statistics
+- Schema includes new profile customization fields
 
 **Critical Fixes Applied**
 - Logout functionality: Backend uses `session.destroy()` with full page redirect via `window.location.href`
 - Position validation: Enforces minimum 1 defender, 1 midfielder, 1 forward
 - Transfer system: Position-locked transfers with -2 point penalties
 - Point calculation: Position-specific multipliers with captain 2x bonus
+- Authentication: Username-based login with optional email
+- Profile customization: 7-day cooldown on team name edits
 
 **Admin Credentials**
 - Email: admin@admin.com

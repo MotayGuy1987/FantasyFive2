@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/hooks/useTheme.tsx";
+import { ProfileCustomizationDialog } from "@/components/profile-customization-dialog";
 import type { User } from "@shared/schema";
 import {
   Dialog,
@@ -60,6 +61,7 @@ const adminMenuItem = {
 export function AppSidebar() {
   const [location, navigate] = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"theme" | "account" | "help" | "about">("theme");
   const [copied, setCopied] = useState(false);
   const { user } = useAuth();
@@ -146,12 +148,20 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 space-y-2">
         {userData && (
           <div className="flex items-center gap-3 rounded-md p-2 hover-elevate">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={userData.profileImageUrl || undefined} />
-              <AvatarFallback>
-                {userData.firstName?.[0] || userData.email?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              data-testid="button-profile-customize"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={userData.profileImageUrl || undefined} />
+                <AvatarFallback style={{ backgroundColor: userData.avatarBgColor || "#dbeafe" }}>
+                  <span style={{ color: userData.avatarPersonColor || "#3b82f6" }}>
+                    {userData.firstName?.[0] || userData.email?.[0] || 'U'}
+                  </span>
+                </AvatarFallback>
+              </Avatar>
+            </button>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
                 {userData.firstName || userData.email || 'User'}
@@ -337,6 +347,12 @@ export function AppSidebar() {
             )}
           </DialogContent>
         </Dialog>
+
+        <ProfileCustomizationDialog
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          user={userData}
+        />
       </SidebarFooter>
     </Sidebar>
   );

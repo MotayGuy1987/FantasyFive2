@@ -33,6 +33,11 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   teamName: varchar("team_name"),
+  avatarPersonColor: varchar("avatar_person_color").default("#3b82f6"),
+  avatarBgColor: varchar("avatar_bg_color").default("#dbeafe"),
+  nationality: varchar("nationality"),
+  favoriteTeam: varchar("favorite_team"),
+  lastTeamNameEditAt: timestamp("last_team_name_edit_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

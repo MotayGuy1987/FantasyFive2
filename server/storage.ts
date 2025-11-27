@@ -42,6 +42,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTeamName(userId: string, teamName: string): Promise<User | undefined>;
+  updateUserProfile(userId: string, data: { avatarPersonColor?: string; avatarBgColor?: string; nationality?: string; favoriteTeam?: string }): Promise<User | undefined>;
+  canEditTeamName(userId: string): Promise<boolean>;
   
   getAllPlayers(): Promise<Player[]>;
   getPlayer(id: string): Promise<Player | undefined>;
@@ -131,10 +133,29 @@ export class DatabaseStorage implements IStorage {
   async updateUserTeamName(userId: string, teamName: string): Promise<User | undefined> {
     const [user] = await db
       .update(users)
-      .set({ teamName, updatedAt: new Date() })
+      .set({ teamName, lastTeamNameEditAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  async updateUserProfile(userId: string, data: { avatarPersonColor?: string; avatarBgColor?: string; nationality?: string; favoriteTeam?: string }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async canEditTeamName(userId: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user || !user.lastTeamNameEditAt) return true;
+    
+    const lastEdit = new Date(user.lastTeamNameEditAt);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - lastEdit.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 7;
   }
 
   async getAllPlayers(): Promise<Player[]> {

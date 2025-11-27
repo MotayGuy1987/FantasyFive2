@@ -588,14 +588,24 @@ export async function registerRoutes(app: Express) {
       const { leagueId } = req.params;
       
       const leagueMembers = await storage.getLeagueMembers(leagueId);
+      const currentGameweek = await storage.getCurrentGameweek();
 
       const leaderboard = await Promise.all(
         leagueMembers.map(async (member) => {
-          const gameweekScores = await db.select().from(gameweekScores).where(eq(gameweekScores.teamId, member.teamId));
-          const totalPoints = gameweekScores.reduce((sum, score) => sum + (score.points || 0), 0);
+          const scores = await db.select().from(gameweekScores).where(eq(gameweekScores.teamId, member.team.id));
+          const totalPoints = scores.reduce((sum, score) => sum + (score.points || 0), 0);
+          const currentGameweekScore = currentGameweek ? scores.find(s => s.gameweekId === currentGameweek.id) : null;
+          const gameweekPoints = currentGameweekScore?.points || 0;
+          
           return {
-            ...member,
+            rank: 0,
+            teamName: member.team.name,
             totalPoints,
+            gameweekPoints,
+            userId: member.user.id,
+            firstName: member.user.firstName,
+            nationality: member.user.nationality,
+            favoriteTeam: member.user.favoriteTeam,
           };
         })
       );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { X } from "lucide-react";
 import { SOCCER_TEAMS, COUNTRIES, AVATAR_COLORS } from "@/lib/teams";
 import type { User } from "@shared/schema";
 
@@ -22,11 +25,22 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
   const [nationality, setNationality] = useState(user?.nationality || "");
   const [favoriteTeam, setFavoriteTeam] = useState(user?.favoriteTeam || "");
   const [teamSearch, setTeamSearch] = useState("");
+  const [teamPopoverOpen, setTeamPopoverOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const teamInputRef = useRef<HTMLInputElement>(null);
 
   const filteredTeams = SOCCER_TEAMS.filter((team) =>
     team.toLowerCase().includes(teamSearch.toLowerCase())
   );
+
+  // Auto-focus the search input when popover opens
+  useEffect(() => {
+    if (teamPopoverOpen) {
+      setTimeout(() => {
+        teamInputRef.current?.focus();
+      }, 0);
+    }
+  }, [teamPopoverOpen]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -141,38 +155,72 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
 
           {/* Favorite Team with Unified Search */}
           <div className="space-y-2">
-            <Label htmlFor="team" className="text-xs sm:text-sm">
+            <Label className="text-xs sm:text-sm">
               Favorite Soccer Team
             </Label>
-            <Select value={favoriteTeam} onValueChange={setFavoriteTeam}>
-              <SelectTrigger id="team" className="text-xs sm:text-sm" data-testid="select-team">
-                <SelectValue placeholder="Search and select team..." />
-              </SelectTrigger>
-              <SelectContent className="max-h-80 p-0">
-                <div className="sticky top-0 bg-background border-b p-2">
+            <Popover open={teamPopoverOpen} onOpenChange={setTeamPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left text-xs sm:text-sm font-normal"
+                  data-testid="select-team"
+                >
+                  {favoriteTeam || "Search and select team..."}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" side="bottom" align="start">
+                <div className="p-2 border-b sticky top-0 bg-background">
                   <Input
+                    ref={teamInputRef}
                     placeholder="Search teams..."
                     value={teamSearch}
                     onChange={(e) => setTeamSearch(e.target.value)}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm h-8"
                     data-testid="input-team-search"
                   />
                 </div>
-                <div className="max-h-64 overflow-y-auto">
+                <ScrollArea className="h-64">
                   {filteredTeams.length > 0 ? (
-                    filteredTeams.map((team) => (
-                      <SelectItem key={team} value={team} className="text-xs sm:text-sm">
-                        {team}
-                      </SelectItem>
-                    ))
+                    <div className="space-y-1 p-2">
+                      {filteredTeams.map((team) => (
+                        <button
+                          key={team}
+                          onClick={() => {
+                            setFavoriteTeam(team);
+                            setTeamSearch("");
+                            setTeamPopoverOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-1.5 rounded-md text-xs sm:text-sm hover-elevate"
+                          data-testid={`team-option-${team}`}
+                        >
+                          {team}
+                        </button>
+                      ))}
+                    </div>
                   ) : (
-                    <div className="p-3 text-xs text-muted-foreground text-center">
+                    <div className="p-4 text-xs text-muted-foreground text-center">
                       No teams found
                     </div>
                   )}
-                </div>
-              </SelectContent>
-            </Select>
+                </ScrollArea>
+                {favoriteTeam && (
+                  <div className="border-t p-2">
+                    <button
+                      onClick={() => {
+                        setFavoriteTeam("");
+                        setTeamSearch("");
+                        teamInputRef.current?.focus();
+                      }}
+                      className="w-full flex items-center justify-center gap-1 px-2 py-1 text-xs rounded-md hover-elevate text-muted-foreground"
+                      data-testid="button-clear-team"
+                    >
+                      <X className="h-3 w-3" />
+                      Clear selection
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Save Button */}

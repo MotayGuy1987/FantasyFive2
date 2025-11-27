@@ -61,7 +61,14 @@ export default function Achievements() {
     const achievement = achievements?.find((a) => a.id === achievementId);
     if (achievement) {
       const details = achievement.details || [];
-      setSelectedDetails(details);
+      // Sort tied players alphabetically within their rank group
+      const sortedDetails = [...details].sort((a, b) => {
+        if (a.value === b.value) {
+          return a.player.name.localeCompare(b.player.name);
+        }
+        return b.value - a.value;
+      });
+      setSelectedDetails(sortedDetails);
     }
   };
 

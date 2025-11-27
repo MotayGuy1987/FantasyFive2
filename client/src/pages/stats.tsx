@@ -27,6 +27,7 @@ interface PlayerStat {
   penaltiesMissed: number;
   goalsConceded: number;
   points: number;
+  ownedPercentage: number;
 }
 
 export default function Stats() {
@@ -91,6 +92,7 @@ export default function Stats() {
                   <TableRow>
                     <TableHead>Player</TableHead>
                     <TableHead className="text-center">Price</TableHead>
+                    <TableHead className="text-center">% Owned</TableHead>
                     <TableHead className="text-center">Goals</TableHead>
                     <TableHead className="text-center">Assists</TableHead>
                     <TableHead className="text-center">Yellow</TableHead>
@@ -112,6 +114,7 @@ export default function Stats() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">£{stat.player.price}M</TableCell>
+                      <TableCell className="text-center">{stat.ownedPercentage.toFixed(1)}%</TableCell>
                       <TableCell className="text-center">{stat.goals}</TableCell>
                       <TableCell className="text-center">{stat.assists}</TableCell>
                       <TableCell className="text-center">{stat.yellowCards}</TableCell>

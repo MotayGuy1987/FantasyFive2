@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
+import { db } from "./db";
+import { teamPlayers } from "@shared/schema";
 
 const createTeamSchema = z.object({
   teamName: z.string().min(1),
@@ -430,9 +432,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allPerformances.push(...perfs);
       }
 
+      // Get total teams count
+      const allTeams = await storage.getAllTeams();
+      const totalTeams = allTeams.length || 1;
+
+      // Get player ownership counts
+      const playerOwnershipMap: Record<string, number> = {};
+      const allTeamPlayers = await db.select().from(teamPlayers);
+      for (const tp of allTeamPlayers) {
+        playerOwnershipMap[tp.playerId] = (playerOwnershipMap[tp.playerId] || 0) + 1;
+      }
+
       // Aggregate stats across all gameweeks for each player
       const stats = allPlayers.map((player) => {
         const playerPerfs = allPerformances.filter((p) => p.playerId === player.id);
+        const ownedCount = playerOwnershipMap[player.id] || 0;
+        const ownedPercentage = (ownedCount / totalTeams) * 100;
         
         return {
           player,
@@ -445,6 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           penaltiesMissed: playerPerfs.reduce((sum, p) => sum + (p.penaltiesMissed || 0), 0),
           goalsConceded: playerPerfs.reduce((sum, p) => sum + (p.goalsConceded || 0), 0),
           points: playerPerfs.reduce((sum, p) => sum + (p.points || 0), 0),
+          ownedPercentage,
         };
       });
 

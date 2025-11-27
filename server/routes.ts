@@ -607,6 +607,9 @@ export async function registerRoutes(app: Express) {
             firstName: member.user.firstName,
             nationality: member.user.nationality,
             favoriteTeam: member.user.favoriteTeam,
+            profileImageUrl: member.user.profileImageUrl,
+            avatarPersonColor: member.user.avatarPersonColor,
+            avatarBgColor: member.user.avatarBgColor,
           };
         })
       );

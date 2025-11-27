@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Plus, LogIn, Copy, Check, Trash2 } from "lucide-react";
+import { Trophy, Plus, LogIn, Copy, Check, Trash2, User as UserIcon } from "lucide-react";
 import { COUNTRY_FLAGS, TEAM_LOGOS } from "@/lib/teams";
 import type { League, Team, Gameweek, User } from "@shared/schema";
 
@@ -40,6 +40,9 @@ interface LeaderboardEntry {
   firstName?: string;
   nationality?: string;
   favoriteTeam?: string;
+  profileImageUrl?: string;
+  avatarPersonColor?: string;
+  avatarBgColor?: string;
 }
 
 export default function Leagues() {
@@ -446,6 +449,7 @@ export default function Leagues() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16">Rank</TableHead>
+                      <TableHead className="w-12">Avatar</TableHead>
                       <TableHead>Team Name</TableHead>
                       <TableHead className="text-right">GW Points</TableHead>
                       <TableHead className="text-right">Total Points</TableHead>
@@ -459,6 +463,26 @@ export default function Leagues() {
                             <Trophy className="h-4 w-4 text-primary inline-block mr-1" />
                           )}
                           {entry.rank}
+                        </TableCell>
+                        <TableCell className="flex justify-center">
+                          <div 
+                            className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{
+                              backgroundColor: entry.avatarBgColor || "#dbeafe",
+                              color: entry.avatarPersonColor || "#3b82f6",
+                            }}
+                            data-testid={`avatar-${entry.userId}`}
+                          >
+                            {entry.profileImageUrl ? (
+                              <img
+                                src={entry.profileImageUrl}
+                                alt={entry.firstName}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <UserIcon className="h-4 w-4" />
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1 min-w-0">

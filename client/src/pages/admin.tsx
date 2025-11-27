@@ -25,6 +25,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2, Edit } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import type { Player, Gameweek, Team, User } from "@shared/schema";
@@ -51,6 +60,8 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<"gameweeks" | "teams-users">("gameweeks");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingUsername, setEditingUsername] = useState<string>("");
+  const [pendingDeleteTeamId, setPendingDeleteTeamId] = useState<string | null>(null);
+  const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
 
   const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
 
@@ -708,7 +719,7 @@ export default function Admin() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => deleteTeamMutation.mutate(team.id)}
+                            onClick={() => setPendingDeleteTeamId(team.id)}
                             disabled={deleteTeamMutation.isPending}
                             data-testid={`button-delete-team-${team.id}`}
                           >
@@ -790,7 +801,7 @@ export default function Admin() {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => deleteUserMutation.mutate(u.id)}
+                              onClick={() => setPendingDeleteUserId(u.id)}
                               disabled={deleteUserMutation.isPending || u.email === "admin@admin.com"}
                               data-testid={`button-delete-user-${u.id}`}
                             >
@@ -809,6 +820,58 @@ export default function Admin() {
           </Card>
         </div>
       )}
+
+      <AlertDialog open={!!pendingDeleteTeamId} onOpenChange={(open) => !open && setPendingDeleteTeamId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Team?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the team and all associated data (players, transfers, scores). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel data-testid="button-cancel-delete-team">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDeleteTeamId) {
+                  deleteTeamMutation.mutate(pendingDeleteTeamId);
+                  setPendingDeleteTeamId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-team"
+            >
+              Delete Team
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!pendingDeleteUserId} onOpenChange={(open) => !open && setPendingDeleteUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the user account and all their team data (squad, transfers, scores, league memberships). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel data-testid="button-cancel-delete-user">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDeleteUserId) {
+                  deleteUserMutation.mutate(pendingDeleteUserId);
+                  setPendingDeleteUserId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-user"
+            >
+              Delete User
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

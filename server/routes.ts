@@ -914,6 +914,35 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/user/:userId/reset-password", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { userId } = req.params;
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      // Generate temporary password
+      const tempPassword = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 4).toUpperCase();
+      
+      // Hash password using same method as auth
+      const iterations = 100000;
+      const keylen = 64;
+      const salt = (await import("crypto")).randomBytes(16).toString("hex");
+      const hash = (await import("crypto")).pbkdf2Sync(tempPassword, salt, iterations, keylen, "sha256").toString("hex");
+      const hashedPassword = `${salt}:${hash}`;
+
+      await storage.updateUserPassword(userId, hashedPassword);
+      res.json({ success: true, temporaryPassword: tempPassword, message: "Password reset. Share this temporary password with the user." });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   app.patch("/api/admin/user/:userId/username", isAuthenticated, async (req: any, res) => {
     try {
       if (req.user.email !== "admin@admin.com") {

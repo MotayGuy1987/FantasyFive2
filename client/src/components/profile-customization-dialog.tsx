@@ -20,12 +20,30 @@ interface ProfileCustomizationDialogProps {
 
 export function ProfileCustomizationDialog({ open, onOpenChange, user }: ProfileCustomizationDialogProps) {
   const { toast } = useToast();
+  const [firstName, setFirstName] = useState(user?.firstName || "");
   const [nationality, setNationality] = useState(user?.nationality || "");
   const [favoriteTeam, setFavoriteTeam] = useState(user?.favoriteTeam || "");
   const [teamSearch, setTeamSearch] = useState("");
   const [teamPopoverOpen, setTeamPopoverOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [canEditFirstName, setCanEditFirstName] = useState(true);
   const teamInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      checkFirstNameCooldown();
+    }
+  }, [open]);
+
+  const checkFirstNameCooldown = async () => {
+    try {
+      const response = await fetch("/api/user/first-name-cooldown");
+      const data = await response.json();
+      setCanEditFirstName(data.canEdit);
+    } catch (error) {
+      console.error("Error checking first name cooldown:", error);
+    }
+  };
 
   const filteredTeams = SOCCER_TEAMS.filter((team) =>
     team.toLowerCase().includes(teamSearch.toLowerCase())
@@ -44,6 +62,20 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
   const handleSave = async () => {
     setLoading(true);
     try {
+      if (firstName !== user?.firstName && !canEditFirstName) {
+        toast({
+          title: "Error",
+          description: "You can only change your display name once every 7 days",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (firstName !== user?.firstName) {
+        await apiRequest("PATCH", "/api/user/first-name", { firstName });
+      }
+
       await apiRequest("PATCH", "/api/user/profile", {
         nationality,
         favoriteTeam,
@@ -73,6 +105,27 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Display Name */}
+          <div className="space-y-2">
+            <Label htmlFor="firstName" className="text-xs sm:text-sm">
+              Display Name {!canEditFirstName && <span className="text-xs text-muted-foreground">(Next edit in 7 days)</span>}
+            </Label>
+            <Input
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              disabled={!canEditFirstName}
+              placeholder="Your display name"
+              className="text-xs sm:text-sm"
+              data-testid="input-first-name"
+            />
+            {!canEditFirstName && (
+              <p className="text-xs text-muted-foreground">
+                You can only change your display name once every 7 days
+              </p>
+            )}
+          </div>
+
           {/* Team Logo Preview */}
           <div className="flex justify-center mb-6">
             {favoriteTeam && TEAM_LOGOS[favoriteTeam] ? (

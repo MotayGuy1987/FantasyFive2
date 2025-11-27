@@ -167,6 +167,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/user/first-name-cooldown', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const canEdit = await storage.canEditFirstName(userId);
+      res.json({ canEdit });
+    } catch (error) {
+      console.error("Error checking first name cooldown:", error);
+      res.status(500).json({ message: "Failed to check cooldown" });
+    }
+  });
+
+  app.patch('/api/user/first-name', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { firstName } = req.body;
+
+      if (!firstName || typeof firstName !== 'string') {
+        return res.status(400).json({ message: "Invalid first name" });
+      }
+
+      const canEdit = await storage.canEditFirstName(userId);
+      if (!canEdit) {
+        return res.status(429).json({ message: "You can only change your display name once every 7 days" });
+      }
+
+      const updatedUser = await storage.updateUserFirstName(userId, firstName);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating first name:", error);
+      res.status(500).json({ message: "Failed to update first name" });
+    }
+  });
+
   app.get("/api/players", isAuthenticated, async (req, res) => {
     try {
       const players = await storage.getAllPlayers();

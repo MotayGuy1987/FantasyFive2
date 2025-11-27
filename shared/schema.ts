@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   nationality: varchar("nationality"),
   favoriteTeam: varchar("favorite_team"),
   lastTeamNameEditAt: timestamp("last_team_name_edit_at"),
+  lastFirstNameEditAt: timestamp("last_first_name_edit_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

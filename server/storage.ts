@@ -42,8 +42,10 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTeamName(userId: string, teamName: string): Promise<User | undefined>;
+  updateUserFirstName(userId: string, firstName: string): Promise<User | undefined>;
   updateUserProfile(userId: string, data: { avatarPersonColor?: string; avatarBgColor?: string; nationality?: string; favoriteTeam?: string }): Promise<User | undefined>;
   canEditTeamName(userId: string): Promise<boolean>;
+  canEditFirstName(userId: string): Promise<boolean>;
   
   getAllPlayers(): Promise<Player[]>;
   getPlayer(id: string): Promise<Player | undefined>;
@@ -139,6 +141,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUserFirstName(userId: string, firstName: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ firstName, lastFirstNameEditAt: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
   async updateUserProfile(userId: string, data: { avatarPersonColor?: string; avatarBgColor?: string; nationality?: string; favoriteTeam?: string }): Promise<User | undefined> {
     const [user] = await db
       .update(users)
@@ -153,6 +164,16 @@ export class DatabaseStorage implements IStorage {
     if (!user || !user.lastTeamNameEditAt) return true;
     
     const lastEdit = new Date(user.lastTeamNameEditAt);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - lastEdit.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 7;
+  }
+
+  async canEditFirstName(userId: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user || !user.lastFirstNameEditAt) return true;
+    
+    const lastEdit = new Date(user.lastFirstNameEditAt);
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - lastEdit.getTime()) / (1000 * 60 * 60 * 24));
     return diffDays >= 7;

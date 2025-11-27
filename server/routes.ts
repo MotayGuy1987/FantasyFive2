@@ -399,20 +399,24 @@ export async function registerRoutes(app: Express) {
           title: "Most Goals Conceded",
           icon: "⚠️",
           details: Object.values(statsMap)
-            .filter((s: any) => s.goalsConceded > 0)
+            .filter((s: any) => s.player.position === "DEF" && s.goalsConceded > 0)
             .sort((a: any, b: any) => b.goalsConceded - a.goalsConceded)
             .map((s: any) => ({ player: s.player, value: s.goalsConceded })),
         },
       ];
 
-      const result = achievements.map((ach) => ({
-        id: ach.id,
-        title: ach.title,
-        icon: ach.icon,
-        count: ach.details.length,
-        topPlayer: ach.details.length > 0 ? ach.details[0] : undefined,
-        details: ach.details,
-      }));
+      const result = achievements.map((ach) => {
+        const topValue = ach.details.length > 0 ? ach.details[0].value : undefined;
+        const topPlayers = topValue !== undefined ? ach.details.filter((d: any) => d.value === topValue) : [];
+        return {
+          id: ach.id,
+          title: ach.title,
+          icon: ach.icon,
+          count: ach.details.length,
+          topPlayers: topPlayers,
+          details: ach.details,
+        };
+      });
 
       res.json(result);
     } catch (error) {

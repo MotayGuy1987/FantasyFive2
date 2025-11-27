@@ -22,7 +22,7 @@ interface Achievement {
   title: string;
   icon: string;
   count: number;
-  topPlayer?: { player: Player; value: number };
+  topPlayers?: { player: Player; value: number }[];
   details?: AchievementDetail[];
 }
 
@@ -112,13 +112,17 @@ export default function Achievements() {
                 </div>
               </CardHeader>
               <CardContent>
-                {achievement.topPlayer ? (
+                {achievement.topPlayers && achievement.topPlayers.length > 0 ? (
                   <div>
-                    <p className="text-3xl font-bold text-primary">{achievement.topPlayer.value}</p>
+                    <p className="text-3xl font-bold text-primary">{achievement.topPlayers[0].value}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {achievement.topPlayer.player.name}
+                      {achievement.topPlayers.length >= 3
+                        ? "3+ People"
+                        : achievement.topPlayers.length === 2
+                          ? `${achievement.topPlayers[0].player.name} & ${achievement.topPlayers[1].player.name}`
+                          : achievement.topPlayers[0].player.name}
                     </p>
-                    <PositionBadge position={achievement.topPlayer.player.position} />
+                    <PositionBadge position={achievement.topPlayers[0].player.position} />
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-sm">No data available</p>

@@ -780,6 +780,51 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/performances", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { gameweekId, performances, priceChanges } = req.body;
+      if (!gameweekId || !Array.isArray(performances)) {
+        return res.status(400).json({ message: "gameweekId and performances array required" });
+      }
+
+      // Create/update all player performances
+      for (const perf of performances) {
+        await storage.upsertPlayerPerformance({
+          playerId: perf.playerId,
+          gameweekId,
+          goals: perf.goals || 0,
+          assists: perf.assists || 0,
+          yellowCards: perf.yellowCards || 0,
+          redCards: perf.redCards || 0,
+          isMotm: perf.isMotm || false,
+          daysPlayed: perf.daysPlayed || 0,
+          penaltiesMissed: perf.penaltiesMissed || 0,
+          goalsConceded: perf.goalsConceded || 0,
+        });
+      }
+
+      // Update player prices
+      if (priceChanges && typeof priceChanges === 'object') {
+        for (const [playerId, priceChange] of Object.entries(priceChanges)) {
+          const player = await storage.getPlayer(playerId);
+          if (player) {
+            const newPrice = (parseFloat(player.price) + (priceChange as number)).toFixed(1);
+            await storage.updatePlayerPrice(playerId, newPrice);
+          }
+        }
+      }
+
+      res.json({ success: true, message: "Performances and prices updated" });
+    } catch (error) {
+      console.error("Error updating performances:", error);
+      res.status(500).json({ message: "Failed to update performances" });
+    }
+  });
+
   app.post("/api/admin/end-gameweek", isAuthenticated, async (req: any, res) => {
     try {
       if (req.user.email !== "admin@admin.com") {

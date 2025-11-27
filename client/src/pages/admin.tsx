@@ -133,6 +133,8 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/team/gameweek-score"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
       queryClient.invalidateQueries({ queryKey: ["/api/players"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/achievements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
         title: "Success",
         description: "Changes confirmed! Performances and prices updated.",

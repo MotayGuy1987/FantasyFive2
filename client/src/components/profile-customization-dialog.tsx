@@ -168,8 +168,8 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
                   {favoriteTeam || "Search and select team..."}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" side="bottom" align="start">
-                <div className="p-2 border-b sticky top-0 bg-background">
+              <PopoverContent className="w-56 p-0 max-h-[50vh] sm:max-h-80" side="top" align="start">
+                <div className="p-2 border-b sticky top-0 bg-background z-10">
                   <Input
                     ref={teamInputRef}
                     placeholder="Search teams..."
@@ -179,7 +179,7 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
                     data-testid="input-team-search"
                   />
                 </div>
-                <ScrollArea className="h-64">
+                <ScrollArea className="h-40 sm:h-64">
                   {filteredTeams.length > 0 ? (
                     <div className="space-y-1 p-2">
                       {filteredTeams.map((team) => (

@@ -139,25 +139,26 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
             </Select>
           </div>
 
-          {/* Favorite Team with Search */}
+          {/* Favorite Team with Unified Search */}
           <div className="space-y-2">
             <Label htmlFor="team" className="text-xs sm:text-sm">
               Favorite Soccer Team
             </Label>
-            <div className="space-y-1.5">
-              <Input
-                id="team-search"
-                placeholder="Search teams..."
-                value={teamSearch}
-                onChange={(e) => setTeamSearch(e.target.value)}
-                className="text-xs sm:text-sm"
-                data-testid="input-team-search"
-              />
-              <Select value={favoriteTeam} onValueChange={setFavoriteTeam}>
-                <SelectTrigger id="team" className="text-xs sm:text-sm" data-testid="select-team">
-                  <SelectValue placeholder="Select your favorite team" />
-                </SelectTrigger>
-                <SelectContent className="max-h-64">
+            <Select value={favoriteTeam} onValueChange={setFavoriteTeam}>
+              <SelectTrigger id="team" className="text-xs sm:text-sm" data-testid="select-team">
+                <SelectValue placeholder="Search and select team..." />
+              </SelectTrigger>
+              <SelectContent className="max-h-80 p-0">
+                <div className="sticky top-0 bg-background border-b p-2">
+                  <Input
+                    placeholder="Search teams..."
+                    value={teamSearch}
+                    onChange={(e) => setTeamSearch(e.target.value)}
+                    className="text-xs sm:text-sm"
+                    data-testid="input-team-search"
+                  />
+                </div>
+                <div className="max-h-64 overflow-y-auto">
                   {filteredTeams.length > 0 ? (
                     filteredTeams.map((team) => (
                       <SelectItem key={team} value={team} className="text-xs sm:text-sm">
@@ -165,13 +166,13 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-xs text-muted-foreground text-center">
+                    <div className="p-3 text-xs text-muted-foreground text-center">
                       No teams found
                     </div>
                   )}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Save Button */}

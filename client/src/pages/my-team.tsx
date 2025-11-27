@@ -703,17 +703,30 @@ export default function MyTeam() {
 
           {existingTeamPlayers && existingTeamPlayers.length > 0 && (
             <TabsContent value="transfers" className="space-y-6">
-          <Card className="p-4">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Free Transfers</div>
-              <div className="text-2xl font-bold font-mono text-primary">
-                {freeTransfers >= 999 ? "∞" : freeTransfers}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card className="p-4">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">Free Transfers</div>
+                <div className="text-2xl font-bold font-mono text-primary">
+                  {freeTransfers >= 999 ? "∞" : freeTransfers}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {freeTransfers >= 999 ? "Unlimited this week" : (freeTransfers === 0 ? "Next transfer: -2 pts" : "Available")}
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {freeTransfers >= 999 ? "Unlimited this week" : (freeTransfers === 0 ? "Next transfer: -2 pts" : "Available")}
+            </Card>
+            <Card className="p-4">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-1">Budget Available</div>
+                <div className={`text-2xl font-bold font-mono ${budgetRemaining >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400'}`}>
+                  £{budgetRemaining.toFixed(1)}M
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {budgetRemaining >= 0 ? "Can spend" : "Over budget"}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
 
           {transferCost < 0 && (
             <Alert>
@@ -753,7 +766,10 @@ export default function MyTeam() {
                             Transfer Out
                           </Button>
                           <Button
-                            onClick={() => setSelectedOut(null)}
+                            onClick={() => {
+                              setSelectedOut(null);
+                              setSelectedIn(null);
+                            }}
                             variant="outline"
                             size="sm"
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"

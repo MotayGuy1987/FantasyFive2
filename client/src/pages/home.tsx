@@ -162,10 +162,10 @@ export default function Home() {
   const hasTeam = !!team && teamPlayers && teamPlayers.length > 0;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Dashboard</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
           {currentGameweek 
             ? `Gameweek ${currentGameweek.number}${currentGameweek.isActive ? ' (Active)' : currentGameweek.isCompleted ? ' (Completed)' : ''}`
             : 'Season not started'}
@@ -175,11 +175,11 @@ export default function Home() {
       {!hasTeam ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-              <Users className="h-10 w-10" />
+            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-3 sm:mb-4">
+              <Users className="h-8 w-8 sm:h-10 sm:w-10" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Build Your Squad</h2>
-            <p className="text-muted-foreground mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold mb-2">Build Your Squad</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
               You haven't created a team yet. Pick your 5 starters and 1 bench player to get started!
             </p>
             <Button size="lg" asChild data-testid="button-build-squad">
@@ -189,10 +189,10 @@ export default function Home() {
         </Card>
       ) : (
         <>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Points</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Total Points</CardTitle>
                 <Trophy className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>

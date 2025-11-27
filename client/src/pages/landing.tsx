@@ -78,13 +78,13 @@ export default function Landing() {
 
   if (mode === "login") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
+        <Card className="w-full max-w-xs sm:max-w-sm">
           <CardHeader>
-            <CardTitle>Log In</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Log In</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
               <Input
                 type="text"
                 placeholder="Username"
@@ -130,13 +130,13 @@ export default function Landing() {
 
   if (mode === "signup") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 overflow-y-auto">
+        <Card className="w-full max-w-xs sm:max-w-sm my-4">
           <CardHeader>
-            <CardTitle>Create Account</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Create Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-3 sm:space-y-4">
               <Input
                 type="text"
                 placeholder="Username (min 3 characters)"
@@ -204,39 +204,39 @@ export default function Landing() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Trophy className="h-6 w-6" />
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-md bg-primary text-primary-foreground flex-shrink-0">
+              <Trophy className="h-4 w-4 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Fantasy Mini League</h1>
-              <p className="text-xs text-muted-foreground">5-a-side football</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold truncate">Fantasy Mini League</h1>
+              <p className="text-xs text-muted-foreground">5-a-side</p>
             </div>
           </div>
-          <div className="space-x-2">
-            <Button variant="outline" onClick={() => setMode("login")} data-testid="button-login-header">
+          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+            <Button variant="outline" onClick={() => setMode("login")} size="sm" className="text-xs sm:text-sm" data-testid="button-login-header">
               Log In
             </Button>
-            <Button onClick={() => setMode("signup")} data-testid="button-signup-header">
+            <Button onClick={() => setMode("signup")} size="sm" className="text-xs sm:text-sm" data-testid="button-signup-header">
               Sign Up
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Build Your Dream 5-a-Side Team</h2>
-          <p className="text-xl text-muted-foreground mb-8">
+      <main className="flex-1 container mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Build Your Dream 5-a-Side Team</h2>
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8">
             Pick your squad, manage transfers, and compete against friends in this Fantasy Premier League-style mini-game
           </p>
-          <Button size="lg" onClick={() => setMode("signup")} data-testid="button-get-started">
+          <Button onClick={() => setMode("signup")} className="text-xs sm:text-sm" data-testid="button-get-started">
             Get Started
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
           <Card>
             <CardContent className="p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary mb-4">

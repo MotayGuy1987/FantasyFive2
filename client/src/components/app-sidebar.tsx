@@ -154,14 +154,22 @@ export function AppSidebar() {
               className="cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-profile-customize"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={userData.profileImageUrl || undefined} />
-                <AvatarFallback style={{ backgroundColor: userData.avatarBgColor || "#dbeafe" }}>
-                  <span style={{ color: userData.avatarPersonColor || "#3b82f6" }}>
-                    {userData.firstName?.[0] || userData.email?.[0] || 'U'}
-                  </span>
-                </AvatarFallback>
-              </Avatar>
+              {userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam] ? (
+                <img
+                  src={TEAM_LOGOS[userData.favoriteTeam]}
+                  alt={userData.favoriteTeam}
+                  className="h-8 w-8 rounded-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    <span>{userData.firstName?.[0] || userData.email?.[0] || 'U'}</span>
+                  </AvatarFallback>
+                </Avatar>
+              )}
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 min-w-0">

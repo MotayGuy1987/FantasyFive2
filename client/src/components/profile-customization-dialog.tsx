@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
-import { SOCCER_TEAMS, COUNTRIES, AVATAR_COLORS } from "@/lib/teams";
+import { SOCCER_TEAMS, COUNTRIES, TEAM_LOGOS } from "@/lib/teams";
 import type { User } from "@shared/schema";
 
 interface ProfileCustomizationDialogProps {
@@ -20,8 +20,6 @@ interface ProfileCustomizationDialogProps {
 
 export function ProfileCustomizationDialog({ open, onOpenChange, user }: ProfileCustomizationDialogProps) {
   const { toast } = useToast();
-  const [personColor, setPersonColor] = useState(user?.avatarPersonColor || "#3b82f6");
-  const [bgColor, setBgColor] = useState(user?.avatarBgColor || "#dbeafe");
   const [nationality, setNationality] = useState(user?.nationality || "");
   const [favoriteTeam, setFavoriteTeam] = useState(user?.favoriteTeam || "");
   const [teamSearch, setTeamSearch] = useState("");
@@ -47,8 +45,6 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
     setLoading(true);
     try {
       await apiRequest("PATCH", "/api/user/profile", {
-        avatarPersonColor: personColor,
-        avatarBgColor: bgColor,
         nationality,
         favoriteTeam,
       });
@@ -72,67 +68,27 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Customize Profile</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Personalize your avatar and profile details
+            Select your favorite team as your profile picture
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Avatar Preview */}
+          {/* Team Logo Preview */}
           <div className="flex justify-center mb-6">
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold"
-              style={{ backgroundColor: bgColor }}
-            >
-              <span style={{ color: personColor }}>
-                {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-              </span>
-            </div>
-          </div>
-
-          {/* Person Color */}
-          <div className="space-y-2">
-            <Label className="text-xs sm:text-sm">Avatar Person Color</Label>
-            <div className="grid grid-cols-8 gap-2">
-              {AVATAR_COLORS.map((color) => {
-                const isDisabled = bgColor === color;
-                return (
-                  <button
-                    key={color}
-                    onClick={() => !isDisabled && setPersonColor(color)}
-                    disabled={isDisabled}
-                    className={`w-8 h-8 rounded-md border-2 transition-all ${
-                      personColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
-                    } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                    style={{ backgroundColor: color }}
-                    data-testid={`button-person-color-${color}`}
-                    title={isDisabled ? "Already used for background" : ""}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Background Color */}
-          <div className="space-y-2">
-            <Label className="text-xs sm:text-sm">Avatar Background Color</Label>
-            <div className="grid grid-cols-8 gap-2">
-              {AVATAR_COLORS.map((color) => {
-                const isDisabled = personColor === color;
-                return (
-                  <button
-                    key={color}
-                    onClick={() => !isDisabled && setBgColor(color)}
-                    disabled={isDisabled}
-                    className={`w-8 h-8 rounded-md border-2 transition-all ${
-                      bgColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
-                    } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                    style={{ backgroundColor: color }}
-                    data-testid={`button-bg-color-${color}`}
-                    title={isDisabled ? "Already used for person color" : ""}
-                  />
-                );
-              })}
-            </div>
+            {favoriteTeam && TEAM_LOGOS[favoriteTeam] ? (
+              <img
+                src={TEAM_LOGOS[favoriteTeam]}
+                alt={favoriteTeam}
+                className="w-24 h-24 rounded-full object-contain border-2 border-primary/20 p-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
+                <p className="text-xs text-muted-foreground text-center px-2">Select a team</p>
+              </div>
+            )}
           </div>
 
           {/* Nationality */}

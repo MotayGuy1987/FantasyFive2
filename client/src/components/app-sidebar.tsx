@@ -1,4 +1,4 @@
-import { Home, Users, Repeat, Trophy, ShieldCheck, BarChart3, Settings, Moon, Sun } from "lucide-react";
+import { Home, Users, Repeat, Trophy, ShieldCheck, BarChart3, Settings, Moon, Sun, Info, HelpCircle, LogOut, Copy, Check } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import {
@@ -60,12 +60,22 @@ const adminMenuItem = {
 export function AppSidebar() {
   const [location, navigate] = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"theme" | "account" | "help" | "about">("theme");
+  const [copied, setCopied] = useState(false);
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const userData = user as User | undefined;
   
   const isAdmin = userData?.email === "admin@admin.com";
   const hasTeam = !!userData?.teamName;
+  
+  const handleCopyUsername = () => {
+    if (userData?.username) {
+      navigator.clipboard.writeText(userData.username);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
   
   const teamMenuItem = {
     title: hasTeam ? "My Team" : "Build First Team",
@@ -171,38 +181,159 @@ export function AppSidebar() {
         </Button>
 
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle>Settings</DialogTitle>
               <DialogDescription>
-                Manage your preferences
+                Manage your preferences and account
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-md border">
-                <div className="flex items-center gap-3">
-                  {theme === "light" ? (
-                    <Sun className="h-5 w-5" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">Theme</p>
-                    <p className="text-xs text-muted-foreground">
-                      {theme === "light" ? "Light Mode" : "Dark Mode"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleTheme}
-                  data-testid="button-toggle-theme"
-                >
-                  {theme === "light" ? "Dark" : "Light"}
-                </Button>
-              </div>
+            
+            {/* Tab Navigation */}
+            <div className="flex gap-2 border-b">
+              <Button
+                variant={activeTab === "theme" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("theme")}
+                className="flex-1"
+              >
+                <Moon className="h-4 w-4 mr-1" />
+                Theme
+              </Button>
+              <Button
+                variant={activeTab === "account" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("account")}
+                className="flex-1"
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Account
+              </Button>
+              <Button
+                variant={activeTab === "help" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("help")}
+                className="flex-1"
+              >
+                <HelpCircle className="h-4 w-4 mr-1" />
+                Help
+              </Button>
+              <Button
+                variant={activeTab === "about" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("about")}
+                className="flex-1"
+              >
+                <Info className="h-4 w-4 mr-1" />
+                About
+              </Button>
             </div>
+
+            {/* Theme Tab */}
+            {activeTab === "theme" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-md border">
+                  <div className="flex items-center gap-3">
+                    {theme === "light" ? (
+                      <Sun className="h-5 w-5" />
+                    ) : (
+                      <Moon className="h-5 w-5" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">Theme</p>
+                      <p className="text-xs text-muted-foreground">
+                        {theme === "light" ? "Light Mode" : "Dark Mode"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTheme}
+                    data-testid="button-toggle-theme"
+                  >
+                    {theme === "light" ? "Dark" : "Light"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Account Tab */}
+            {activeTab === "account" && (
+              <div className="space-y-4">
+                <div className="space-y-3 p-3 rounded-md border bg-muted/30">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Username</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm font-medium truncate">{userData?.username || 'N/A'}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={handleCopyUsername}
+                        data-testid="button-copy-username"
+                      >
+                        {copied ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Team Name</p>
+                    <p className="text-sm font-medium mt-1">{userData?.teamName || 'No team yet'}</p>
+                  </div>
+                  {userData?.firstName && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Display Name</p>
+                      <p className="text-sm font-medium mt-1">
+                        {userData.firstName} {userData.lastName || ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Help Tab */}
+            {activeTab === "help" && (
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium mb-1">Squad Building</p>
+                  <p className="text-xs text-muted-foreground">Build a 5-a-side team with 1 bench player. Min budget is £50M.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Transfers</p>
+                  <p className="text-xs text-muted-foreground">Get 1 free transfer per gameweek. Additional transfers cost 2 points.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Chips</p>
+                  <p className="text-xs text-muted-foreground">Triple Captain (3x points) and Bench Boost (6 active players) available once per season.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Leagues</p>
+                  <p className="text-xs text-muted-foreground">Create or join leagues to compete with friends.</p>
+                </div>
+              </div>
+            )}
+
+            {/* About Tab */}
+            {activeTab === "about" && (
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium">Fantasy Mini League</p>
+                  <p className="text-xs text-muted-foreground mt-1">v1.0.0</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">A 5-a-side fantasy football mini-game inspired by Fantasy Premier League. Build your squad, manage transfers, and compete in leagues.</p>
+                </div>
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">Made with React, TypeScript, and Drizzle ORM.</p>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </SidebarFooter>

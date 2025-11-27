@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { ShieldCheck, Plus, ChevronUp, ChevronDown, Trash2, Edit } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import type { Player, Gameweek, Team, User } from "@shared/schema";
 
@@ -49,6 +49,8 @@ export default function Admin() {
   const [performances, setPerformances] = useState<Record<string, PerformanceData>>({});
   const [priceChanges, setPriceChanges] = useState<Record<string, number>>({});
   const [adminTab, setAdminTab] = useState<"gameweeks" | "teams-users">("gameweeks");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingUsername, setEditingUsername] = useState<string>("");
 
   const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
 
@@ -259,6 +261,28 @@ export default function Admin() {
       toast({
         title: "Success",
         description: "User deleted successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateUsernameMutation = useMutation({
+    mutationFn: async ({ userId, username }: { userId: string; username: string }) => {
+      await apiRequest("PATCH", `/api/admin/user/${userId}/username`, { username });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/teams-users"] });
+      setEditingUserId(null);
+      setEditingUsername("");
+      toast({
+        title: "Success",
+        description: "Username updated successfully!",
       });
     },
     onError: (error: Error) => {
@@ -712,24 +736,67 @@ export default function Admin() {
                     <TableRow>
                       <TableHead>Username</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {teamsUsers.users.map((u) => (
                       <TableRow key={u.id}>
-                        <TableCell>{u.username}</TableCell>
+                        <TableCell>
+                          {editingUserId === u.id ? (
+                            <div className="flex gap-2">
+                              <Input
+                                value={editingUsername}
+                                onChange={(e) => setEditingUsername(e.target.value)}
+                                placeholder="Enter username"
+                                data-testid={`input-username-${u.id}`}
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => updateUsernameMutation.mutate({ userId: u.id, username: editingUsername })}
+                                disabled={updateUsernameMutation.isPending}
+                                data-testid={`button-save-username-${u.id}`}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingUserId(null)}
+                                data-testid={`button-cancel-username-${u.id}`}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <span>{u.username || "(no username)"}</span>
+                          )}
+                        </TableCell>
                         <TableCell>{u.email || "N/A"}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteUserMutation.mutate(u.id)}
-                            disabled={deleteUserMutation.isPending || u.email === "admin@admin.com"}
-                            data-testid={`button-delete-user-${u.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingUserId(u.id);
+                                setEditingUsername(u.username || "");
+                              }}
+                              disabled={u.email === "admin@admin.com" || editingUserId === u.id}
+                              data-testid={`button-edit-username-${u.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteUserMutation.mutate(u.id)}
+                              disabled={deleteUserMutation.isPending || u.email === "admin@admin.com"}
+                              data-testid={`button-delete-user-${u.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

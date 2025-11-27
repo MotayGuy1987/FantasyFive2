@@ -914,6 +914,37 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.patch("/api/admin/user/:userId/username", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { userId } = req.params;
+      const { username } = req.body;
+
+      if (!userId || !username) {
+        return res.status(400).json({ message: "userId and username are required" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ message: "Username must be at least 3 characters" });
+      }
+
+      // Check if username already exists
+      const existing = await storage.getUserByUsername(username);
+      if (existing && existing.id !== userId) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const updated = await storage.updateUserUsername(userId, username);
+      res.json({ success: true, user: updated });
+    } catch (error) {
+      console.error("Error updating username:", error);
+      res.status(500).json({ message: "Failed to update username" });
+    }
+  });
+
   app.delete("/api/admin/user/:userId", isAuthenticated, async (req: any, res) => {
     try {
       if (req.user.email !== "admin@admin.com") {

@@ -43,6 +43,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTeamName(userId: string, teamName: string): Promise<User | undefined>;
   updateUserFirstName(userId: string, firstName: string): Promise<User | undefined>;
+  updateUserUsername(userId: string, username: string): Promise<User | undefined>;
   updateUserProfile(userId: string, data: { avatarPersonColor?: string; avatarBgColor?: string; nationality?: string; favoriteTeam?: string }): Promise<User | undefined>;
   canEditTeamName(userId: string): Promise<boolean>;
   canEditFirstName(userId: string): Promise<boolean>;
@@ -147,6 +148,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ firstName, lastFirstNameEditAt: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserUsername(userId: string, username: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ username, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;

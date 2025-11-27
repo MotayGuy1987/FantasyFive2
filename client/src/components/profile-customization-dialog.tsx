@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { SOCCER_TEAMS, COUNTRIES, AVATAR_COLORS } from "@/lib/teams";
 import type { User } from "@shared/schema";
 
@@ -20,7 +21,12 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
   const [bgColor, setBgColor] = useState(user?.avatarBgColor || "#dbeafe");
   const [nationality, setNationality] = useState(user?.nationality || "");
   const [favoriteTeam, setFavoriteTeam] = useState(user?.favoriteTeam || "");
+  const [teamSearch, setTeamSearch] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const filteredTeams = SOCCER_TEAMS.filter((team) =>
+    team.toLowerCase().includes(teamSearch.toLowerCase())
+  );
 
   const handleSave = async () => {
     setLoading(true);
@@ -72,17 +78,22 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
           <div className="space-y-2">
             <Label className="text-xs sm:text-sm">Avatar Person Color</Label>
             <div className="grid grid-cols-8 gap-2">
-              {AVATAR_COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setPersonColor(color)}
-                  className={`w-8 h-8 rounded-md border-2 transition-all ${
-                    personColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color }}
-                  data-testid={`button-person-color-${color}`}
-                />
-              ))}
+              {AVATAR_COLORS.map((color) => {
+                const isDisabled = bgColor === color;
+                return (
+                  <button
+                    key={color}
+                    onClick={() => !isDisabled && setPersonColor(color)}
+                    disabled={isDisabled}
+                    className={`w-8 h-8 rounded-md border-2 transition-all ${
+                      personColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
+                    } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    style={{ backgroundColor: color }}
+                    data-testid={`button-person-color-${color}`}
+                    title={isDisabled ? "Already used for background" : ""}
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -90,17 +101,22 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
           <div className="space-y-2">
             <Label className="text-xs sm:text-sm">Avatar Background Color</Label>
             <div className="grid grid-cols-8 gap-2">
-              {AVATAR_COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setBgColor(color)}
-                  className={`w-8 h-8 rounded-md border-2 transition-all ${
-                    bgColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color }}
-                  data-testid={`button-bg-color-${color}`}
-                />
-              ))}
+              {AVATAR_COLORS.map((color) => {
+                const isDisabled = personColor === color;
+                return (
+                  <button
+                    key={color}
+                    onClick={() => !isDisabled && setBgColor(color)}
+                    disabled={isDisabled}
+                    className={`w-8 h-8 rounded-md border-2 transition-all ${
+                      bgColor === color ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent'
+                    } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    style={{ backgroundColor: color }}
+                    data-testid={`button-bg-color-${color}`}
+                    title={isDisabled ? "Already used for person color" : ""}
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -123,23 +139,39 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
             </Select>
           </div>
 
-          {/* Favorite Team */}
+          {/* Favorite Team with Search */}
           <div className="space-y-2">
             <Label htmlFor="team" className="text-xs sm:text-sm">
               Favorite Soccer Team
             </Label>
-            <Select value={favoriteTeam} onValueChange={setFavoriteTeam}>
-              <SelectTrigger id="team" className="text-xs sm:text-sm" data-testid="select-team">
-                <SelectValue placeholder="Select your favorite team" />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {SOCCER_TEAMS.map((team) => (
-                  <SelectItem key={team} value={team} className="text-xs sm:text-sm">
-                    {team}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5">
+              <Input
+                id="team-search"
+                placeholder="Search teams..."
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                className="text-xs sm:text-sm"
+                data-testid="input-team-search"
+              />
+              <Select value={favoriteTeam} onValueChange={setFavoriteTeam}>
+                <SelectTrigger id="team" className="text-xs sm:text-sm" data-testid="select-team">
+                  <SelectValue placeholder="Select your favorite team" />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {filteredTeams.length > 0 ? (
+                    filteredTeams.map((team) => (
+                      <SelectItem key={team} value={team} className="text-xs sm:text-sm">
+                        {team}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-xs text-muted-foreground text-center">
+                      No teams found
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Save Button */}

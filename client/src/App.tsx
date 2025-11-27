@@ -15,6 +15,7 @@ import Transfers from "@/pages/transfers";
 import Leagues from "@/pages/leagues";
 import Admin from "@/pages/admin";
 import Stats from "@/pages/stats";
+import Achievements from "@/pages/achievements";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/my-team" component={MyTeam} />
       <Route path="/transfers" component={Transfers} />
       <Route path="/leagues" component={Leagues} />
+      <Route path="/achievements" component={Achievements} />
       <Route path="/stats" component={Stats} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />

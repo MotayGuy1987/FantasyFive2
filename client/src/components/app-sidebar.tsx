@@ -47,6 +47,11 @@ const baseMenuItems = [
     icon: Trophy,
   },
   {
+    title: "Achievements",
+    url: "/achievements",
+    icon: BarChart3,
+  },
+  {
     title: "Stats",
     url: "/stats",
     icon: BarChart3,
@@ -92,6 +97,7 @@ export function AppSidebar() {
     baseMenuItems[1],
     baseMenuItems[2],
     baseMenuItems[3],
+    baseMenuItems[4],
   ];
   
   const handleLogout = async () => {

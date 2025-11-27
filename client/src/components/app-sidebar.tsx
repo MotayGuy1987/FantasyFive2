@@ -148,7 +148,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4 space-y-2">
         {userData && (
-          <div className="flex items-center gap-3 rounded-md p-2 hover-elevate">
+          <div className="flex items-center gap-3 rounded-md p-2 hover-elevate border border-muted-foreground/30">
             <button
               onClick={() => setProfileOpen(true)}
               className="cursor-pointer hover:opacity-80 transition-opacity"

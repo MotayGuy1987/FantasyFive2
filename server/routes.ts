@@ -671,6 +671,19 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/dashboard/most-owned-player", isAuthenticated, async (req, res) => {
+    try {
+      const mostOwned = await storage.getMostOwnedPlayer();
+      if (!mostOwned) {
+        return res.json({ players: [], count: 0, percentage: 0, message: "N/A" });
+      }
+      res.json(mostOwned);
+    } catch (error) {
+      console.error("Error fetching most owned player:", error);
+      res.status(500).json({ message: "Failed to fetch most owned player" });
+    }
+  });
+
   app.get("/api/team-of-week", isAuthenticated, async (req, res) => {
     try {
       const gameweeks = await storage.getAllGameweeks();

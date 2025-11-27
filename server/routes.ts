@@ -399,7 +399,7 @@ export async function registerRoutes(app: Express) {
           title: "Most Goals Conceded",
           icon: "⚠️",
           details: Object.values(statsMap)
-            .filter((s: any) => s.player.position === "DEF")
+            .filter((s: any) => s.player.position === "Defender")
             .sort((a: any, b: any) => b.goalsConceded - a.goalsConceded)
             .map((s: any) => ({ player: s.player, value: s.goalsConceded })),
         },

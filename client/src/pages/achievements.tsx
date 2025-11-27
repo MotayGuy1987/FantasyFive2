@@ -90,7 +90,7 @@ export default function Achievements() {
         </div>
       </div>
 
-      {!achievements || achievements.length === 0 ? (
+      {!achievements || achievements.length === 0 || achievements.every(a => (!a.topPlayers || a.topPlayers.length === 0)) ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             No achievements yet. Players will appear here as they accumulate stats.

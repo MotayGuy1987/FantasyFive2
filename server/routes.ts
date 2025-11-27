@@ -359,7 +359,6 @@ export async function registerRoutes(app: Express) {
           title: "Top Scorer",
           icon: "⚽",
           details: Object.values(statsMap)
-            .filter((s: any) => s.goals > 0)
             .sort((a: any, b: any) => b.goals - a.goals)
             .map((s: any) => ({ player: s.player, value: s.goals })),
         },
@@ -368,7 +367,6 @@ export async function registerRoutes(app: Express) {
           title: "Top Assister",
           icon: "🎯",
           details: Object.values(statsMap)
-            .filter((s: any) => s.assists > 0)
             .sort((a: any, b: any) => b.assists - a.assists)
             .map((s: any) => ({ player: s.player, value: s.assists })),
         },
@@ -377,7 +375,6 @@ export async function registerRoutes(app: Express) {
           title: "Most Cards",
           icon: "🟨",
           details: Object.values(statsMap)
-            .filter((s: any) => s.yellowCards > 0)
             .sort((a: any, b: any) => b.yellowCards - a.yellowCards)
             .map((s: any) => ({ player: s.player, value: s.yellowCards })),
         },
@@ -386,7 +383,6 @@ export async function registerRoutes(app: Express) {
           title: "Most Red Cards",
           icon: "🟥",
           details: Object.values(statsMap)
-            .filter((s: any) => s.redCards > 0)
             .sort((a: any, b: any) => b.redCards - a.redCards)
             .map((s: any) => ({ player: s.player, value: s.redCards })),
         },
@@ -395,7 +391,6 @@ export async function registerRoutes(app: Express) {
           title: "Most Penalties Missed",
           icon: "❌",
           details: Object.values(statsMap)
-            .filter((s: any) => s.penaltiesMissed > 0)
             .sort((a: any, b: any) => b.penaltiesMissed - a.penaltiesMissed)
             .map((s: any) => ({ player: s.player, value: s.penaltiesMissed })),
         },
@@ -404,7 +399,7 @@ export async function registerRoutes(app: Express) {
           title: "Most Goals Conceded",
           icon: "⚠️",
           details: Object.values(statsMap)
-            .filter((s: any) => s.player.position === "DEF" && s.goalsConceded > 0)
+            .filter((s: any) => s.player.position === "DEF")
             .sort((a: any, b: any) => b.goalsConceded - a.goalsConceded)
             .map((s: any) => ({ player: s.player, value: s.goalsConceded })),
         },

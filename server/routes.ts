@@ -363,6 +363,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/dashboard/most-owned-player", isAuthenticated, async (req, res) => {
+    try {
+      const result = await storage.getMostOwnedPlayer();
+      if (!result) {
+        return res.json({ player: null, count: 0, percentage: 0, message: "N/A" });
+      }
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching most owned player:", error);
+      res.status(500).json({ message: "Failed to fetch most owned player" });
+    }
+  });
+
   app.get("/api/dashboard/team-of-week", isAuthenticated, async (req, res) => {
     try {
       const allTeams = await storage.getAllTeams();

@@ -76,6 +76,11 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
+  const { data: mostOwnedPlayer } = useQuery<{ player: Player | null; count: number; percentage: number; message?: string }>({
+    queryKey: ["/api/dashboard/most-owned-player"],
+    enabled: isAuthenticated,
+  });
+
   const activateChipMutation = useMutation({
     mutationFn: async (chipType: "BENCH_BOOST" | "TRIPLE_CAPTAIN") => {
       if (!currentGameweek) throw new Error("No active gameweek");
@@ -223,7 +228,7 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Player of the Week</CardTitle>
@@ -257,6 +262,24 @@ export default function Home() {
                     <p className="text-lg font-bold">{teamOfWeek.user?.firstName || "Team"}</p>
                     <p className="text-xs text-muted-foreground">{teamOfWeek.user?.email}</p>
                     <p className="text-xs text-muted-foreground mt-1">{teamOfWeek.points} points</p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Most Owned</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {mostOwnedPlayer?.message === "N/A" || !mostOwnedPlayer?.player ? (
+                  <p className="text-sm text-muted-foreground">N/A</p>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold">{mostOwnedPlayer.player.name}</p>
+                    <p className="text-xs text-muted-foreground">{mostOwnedPlayer.percentage.toFixed(1)}% owned</p>
+                    <p className="text-xs text-muted-foreground mt-1">{mostOwnedPlayer.count} teams</p>
                   </>
                 )}
               </CardContent>

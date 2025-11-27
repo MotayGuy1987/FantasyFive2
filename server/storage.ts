@@ -92,6 +92,8 @@ export interface IStorage {
   
   getGameweekScore(teamId: string, gameweekId: string): Promise<GameweekScore | undefined>;
   upsertGameweekScore(score: InsertGameweekScore): Promise<GameweekScore>;
+  
+  getMostOwnedPlayer(): Promise<{ player: Player; count: number; percentage: number } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -462,6 +464,34 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return score;
+  }
+
+  async getMostOwnedPlayer(): Promise<{ player: Player; count: number; percentage: number } | null> {
+    const allTeams = await db.select().from(teams);
+    const totalTeams = allTeams.length;
+    
+    if (totalTeams === 0) return null;
+
+    const allTeamPlayers = await db.select().from(teamPlayers);
+    const playerCounts: Record<string, number> = {};
+    
+    for (const tp of allTeamPlayers) {
+      playerCounts[tp.playerId] = (playerCounts[tp.playerId] || 0) + 1;
+    }
+    
+    const mostOwnedPlayerId = Object.keys(playerCounts).reduce((a, b) => 
+      playerCounts[a] > playerCounts[b] ? a : b
+    );
+    
+    if (!mostOwnedPlayerId) return null;
+    
+    const player = await this.getPlayer(mostOwnedPlayerId);
+    if (!player) return null;
+    
+    const count = playerCounts[mostOwnedPlayerId];
+    const percentage = (count / totalTeams) * 100;
+    
+    return { player, count, percentage };
   }
 }
 

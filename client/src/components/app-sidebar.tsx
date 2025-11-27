@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/hooks/useTheme.tsx";
 import { ProfileCustomizationDialog } from "@/components/profile-customization-dialog";
+import { COUNTRY_FLAGS, TEAM_LOGOS } from "@/lib/teams";
 import type { User } from "@shared/schema";
 import {
   Dialog,
@@ -163,12 +164,31 @@ export function AppSidebar() {
               </Avatar>
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {userData.firstName || userData.email || 'User'}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {userData.teamName || 'No team yet'}
-              </p>
+              <div className="flex items-center gap-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {userData.firstName || userData.email || 'User'}
+                </p>
+                {userData.nationality && COUNTRY_FLAGS[userData.nationality] && (
+                  <span className="text-base flex-shrink-0">
+                    {COUNTRY_FLAGS[userData.nationality]}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">
+                  {userData.teamName || 'No team yet'}
+                </p>
+                {userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam] && (
+                  <img
+                    src={TEAM_LOGOS[userData.favoriteTeam]}
+                    alt={userData.favoriteTeam}
+                    className="w-4 h-4 flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
             </div>
             <Button
               variant="ghost"

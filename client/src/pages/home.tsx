@@ -76,7 +76,7 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
-  const { data: mostOwnedPlayer } = useQuery<{ player: Player | null; count: number; percentage: number; message?: string }>({
+  const { data: mostOwnedPlayer } = useQuery<{ players: Player[]; count: number; percentage: number; message?: string }>({
     queryKey: ["/api/dashboard/most-owned-player"],
     enabled: isAuthenticated,
   });
@@ -273,13 +273,17 @@ export default function Home() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {mostOwnedPlayer?.message === "N/A" || !mostOwnedPlayer?.player ? (
+                {mostOwnedPlayer?.message === "N/A" || !mostOwnedPlayer?.players || mostOwnedPlayer.players.length === 0 ? (
                   <p className="text-sm text-muted-foreground">N/A</p>
                 ) : (
                   <>
-                    <p className="text-lg font-bold">{mostOwnedPlayer.player.name}</p>
-                    <p className="text-xs text-muted-foreground">{mostOwnedPlayer.percentage.toFixed(1)}% owned</p>
-                    <p className="text-xs text-muted-foreground mt-1">{mostOwnedPlayer.count} teams</p>
+                    <div className="space-y-1">
+                      {mostOwnedPlayer.players.map((player) => (
+                        <p key={player.id} className="text-lg font-bold">{player.name}</p>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">{mostOwnedPlayer.percentage.toFixed(1)}% owned</p>
+                    <p className="text-xs text-muted-foreground">{mostOwnedPlayer.count} teams</p>
                   </>
                 )}
               </CardContent>

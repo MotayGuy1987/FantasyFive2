@@ -93,7 +93,7 @@ export interface IStorage {
   getGameweekScore(teamId: string, gameweekId: string): Promise<GameweekScore | undefined>;
   upsertGameweekScore(score: InsertGameweekScore): Promise<GameweekScore>;
   
-  getMostOwnedPlayer(): Promise<{ player: Player; count: number; percentage: number } | null>;
+  getMostOwnedPlayer(): Promise<{ players: Player[]; count: number; percentage: number } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -466,7 +466,7 @@ export class DatabaseStorage implements IStorage {
     return score;
   }
 
-  async getMostOwnedPlayer(): Promise<{ player: Player; count: number; percentage: number } | null> {
+  async getMostOwnedPlayer(): Promise<{ players: Player[]; count: number; percentage: number } | null> {
     const allTeams = await db.select().from(teams);
     const totalTeams = allTeams.length;
     
@@ -479,19 +479,27 @@ export class DatabaseStorage implements IStorage {
       playerCounts[tp.playerId] = (playerCounts[tp.playerId] || 0) + 1;
     }
     
-    const mostOwnedPlayerId = Object.keys(playerCounts).reduce((a, b) => 
-      playerCounts[a] > playerCounts[b] ? a : b
+    // Find the maximum count
+    const maxCount = Math.max(...Object.values(playerCounts), 0);
+    if (maxCount === 0) return null;
+    
+    // Find all players with the maximum count
+    const mostOwnedPlayerIds = Object.keys(playerCounts).filter(
+      id => playerCounts[id] === maxCount
     );
     
-    if (!mostOwnedPlayerId) return null;
+    // Fetch all tied players
+    const players: Player[] = [];
+    for (const playerId of mostOwnedPlayerIds) {
+      const player = await this.getPlayer(playerId);
+      if (player) players.push(player);
+    }
     
-    const player = await this.getPlayer(mostOwnedPlayerId);
-    if (!player) return null;
+    if (players.length === 0) return null;
     
-    const count = playerCounts[mostOwnedPlayerId];
-    const percentage = (count / totalTeams) * 100;
+    const percentage = (maxCount / totalTeams) * 100;
     
-    return { player, count, percentage };
+    return { players, count: maxCount, percentage };
   }
 }
 

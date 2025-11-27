@@ -369,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = await storage.getMostOwnedPlayer();
       if (!result) {
-        return res.json({ player: null, count: 0, percentage: 0, message: "N/A" });
+        return res.json({ players: [], count: 0, percentage: 0, message: "N/A" });
       }
       res.json(result);
     } catch (error) {

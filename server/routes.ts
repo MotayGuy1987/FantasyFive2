@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { teamPlayers, gameweekScores } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 

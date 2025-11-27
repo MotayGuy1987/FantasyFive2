@@ -187,6 +187,15 @@ export const insertTeamPlayerSchema = createInsertSchema(teamPlayers).omit({
   id: true,
 });
 
+export const createTeamSchema = z.object({
+  teamName: z.string().min(1).max(30),
+  players: z.array(z.object({
+    playerId: z.string(),
+    isCaptain: z.boolean(),
+    isOnBench: z.boolean(),
+  })),
+});
+
 export const insertTransferSchema = createInsertSchema(transfers).omit({
   id: true,
   createdAt: true,

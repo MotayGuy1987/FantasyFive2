@@ -6,7 +6,7 @@ import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { teamPlayers, gameweekScores } from "@shared/schema";
+import { teamPlayers, gameweekScores, createTeamSchema } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express) {

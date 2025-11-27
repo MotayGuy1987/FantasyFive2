@@ -182,21 +182,9 @@ export function AppSidebar() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">
-                  {userData.teamName || 'No team yet'}
-                </p>
-                {userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam] && (
-                  <img
-                    src={TEAM_LOGOS[userData.favoriteTeam]}
-                    alt={userData.favoriteTeam}
-                    className="w-4 h-4 flex-shrink-0"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {userData.teamName || 'No team yet'}
+              </p>
             </div>
             <Button
               variant="ghost"

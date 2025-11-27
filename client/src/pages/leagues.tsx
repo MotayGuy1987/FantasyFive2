@@ -473,16 +473,6 @@ export default function Leagues() {
                                 )}
                               </>
                             )}
-                            {entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam] && (
-                              <img
-                                src={TEAM_LOGOS[entry.favoriteTeam]}
-                                alt={entry.favoriteTeam}
-                                className="w-3 h-3 flex-shrink-0"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono font-medium">

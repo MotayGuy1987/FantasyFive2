@@ -3,7 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Trophy, Users, Target, Zap } from "lucide-react";
+import { Trophy, Users, Target, Zap, HelpCircle, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Landing() {
@@ -14,7 +15,45 @@ export default function Landing() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [helpDialog, setHelpDialog] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const helpExplanations: Record<string, { title: string; description: string[] }> = {
+    squad: {
+      title: "5-a-Side Squad",
+      description: [
+        "Build your team with exactly 5 starting players and 1 bench player within a 50 million budget.",
+        "You must maintain position balance: at least 1 defender, 1 midfielder, and 1 forward in your starting lineup.",
+        "Your bench player acts as a backup - if a starter scores 0 points, your bench player automatically takes their place for that gameweek.",
+      ],
+    },
+    scoring: {
+      title: "Smart Scoring",
+      description: [
+        "Earn points based on real player performances each gameweek.",
+        "Goals, assists, and Man of the Match awards all earn you points. Yellow and red cards deduct points.",
+        "Position matters: Defenders earn 6 points per goal, while Midfielders and Forwards earn 5 points per goal.",
+        "Your captain earns double points. With the Triple Captain chip, they earn triple points instead!",
+      ],
+    },
+    chips: {
+      title: "Power Chips",
+      description: [
+        "Bench Boost: Your bench player scores full points along with your starting 5. Instead of 5 players, you get 6 scoring for maximum advantage.",
+        "Triple Captain: Make your captain score triple points instead of double. Perfect for when your captain is playing against a weak opponent.",
+        "Each chip can only be used once every 7 gameweeks, so use them strategically!",
+      ],
+    },
+    leagues: {
+      title: "Create Leagues",
+      description: [
+        "Create private leagues and invite your friends using unique join codes.",
+        "Compete on leaderboards to see who's the best fantasy manager.",
+        "Join the Overall League automatically and compete against all players.",
+        "Track your rank, total points, and gameweek performance against rivals.",
+      ],
+    },
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,7 +276,7 @@ export default function Landing() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
-          <Card>
+          <Card className="relative">
             <CardContent className="p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary mb-4">
                 <Users className="h-6 w-6" />
@@ -246,10 +285,17 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground">
                 Pick 5 starters and 1 bench player within a 50M budget
               </p>
+              <button
+                onClick={() => setHelpDialog("squad")}
+                className="absolute top-3 right-3 p-1 hover-elevate rounded-md"
+                data-testid="button-help-squad"
+              >
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative">
             <CardContent className="p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary mb-4">
                 <Target className="h-6 w-6" />
@@ -258,10 +304,17 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground">
                 Points for goals, assists, and MOTM. Position-based bonuses
               </p>
+              <button
+                onClick={() => setHelpDialog("scoring")}
+                className="absolute top-3 right-3 p-1 hover-elevate rounded-md"
+                data-testid="button-help-scoring"
+              >
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative">
             <CardContent className="p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary mb-4">
                 <Zap className="h-6 w-6" />
@@ -270,10 +323,17 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground">
                 Bench Boost and Triple Captain to maximize your points
               </p>
+              <button
+                onClick={() => setHelpDialog("chips")}
+                className="absolute top-3 right-3 p-1 hover-elevate rounded-md"
+                data-testid="button-help-chips"
+              >
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative">
             <CardContent className="p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary mb-4">
                 <Trophy className="h-6 w-6" />
@@ -282,9 +342,37 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground">
                 Join or create leagues and compete on the leaderboard
               </p>
+              <button
+                onClick={() => setHelpDialog("leagues")}
+                className="absolute top-3 right-3 p-1 hover-elevate rounded-md"
+                data-testid="button-help-leagues"
+              >
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </button>
             </CardContent>
           </Card>
         </div>
+
+        {/* Help Dialog */}
+        {helpDialog && (
+          <Dialog open={!!helpDialog} onOpenChange={() => setHelpDialog(null)}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{helpExplanations[helpDialog]?.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                {helpExplanations[helpDialog]?.description.map((desc, idx) => (
+                  <p key={idx} className="text-sm text-muted-foreground">
+                    {desc}
+                  </p>
+                ))}
+              </div>
+              <Button variant="outline" onClick={() => setHelpDialog(null)} className="w-full">
+                Got it
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <div className="max-w-2xl mx-auto">
           <Card>

@@ -5,7 +5,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 import { db } from "./db";
-import { teamPlayers } from "@shared/schema";
+import { teamPlayers, gameweekScores } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express) {

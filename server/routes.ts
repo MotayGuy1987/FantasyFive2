@@ -738,6 +738,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             teamName: member.user.teamName || member.user.email || 'Unknown',
             totalPoints: member.team.totalPoints || 0,
             gameweekPoints: gameweekScore?.points || 0,
+            userId: member.user.id,
+            firstName: member.user.firstName,
+            nationality: member.user.nationality,
+            favoriteTeam: member.user.favoriteTeam,
           };
         })
       );

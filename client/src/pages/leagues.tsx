@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trophy, Plus, LogIn, Copy, Check, Trash2 } from "lucide-react";
+import { COUNTRY_FLAGS, TEAM_LOGOS } from "@/lib/teams";
 import type { League, Team, Gameweek, User } from "@shared/schema";
 
 interface LeaderboardEntry {
@@ -35,6 +36,10 @@ interface LeaderboardEntry {
   teamName: string;
   totalPoints: number;
   gameweekPoints: number;
+  userId?: string;
+  firstName?: string;
+  nationality?: string;
+  favoriteTeam?: string;
 }
 
 export default function Leagues() {
@@ -455,7 +460,31 @@ export default function Leagues() {
                           )}
                           {entry.rank}
                         </TableCell>
-                        <TableCell className="font-medium">{entry.teamName}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="truncate">{entry.teamName}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                            {entry.firstName && (
+                              <>
+                                <span className="truncate">{entry.firstName}</span>
+                                {entry.nationality && COUNTRY_FLAGS[entry.nationality] && (
+                                  <span className="flex-shrink-0">{COUNTRY_FLAGS[entry.nationality]}</span>
+                                )}
+                              </>
+                            )}
+                            {entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam] && (
+                              <img
+                                src={TEAM_LOGOS[entry.favoriteTeam]}
+                                alt={entry.favoriteTeam}
+                                className="w-3 h-3 flex-shrink-0"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right font-mono font-medium">
                           {entry.gameweekPoints}
                         </TableCell>

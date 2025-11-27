@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Landing() {
   const [mode, setMode] = useState<"view" | "login" | "signup">("view");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -19,7 +20,7 @@ export default function Landing() {
     e.preventDefault();
     setLoading(true);
     try {
-      await apiRequest("POST", "/api/auth/login", { email, password });
+      await apiRequest("POST", "/api/auth/login", { username, password });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({ title: "Success", description: "Logged in successfully" });
       window.location.href = "/";
@@ -44,9 +45,18 @@ export default function Landing() {
       });
       return;
     }
+    if (username.length < 3) {
+      toast({
+        title: "Error",
+        description: "Username must be at least 3 characters",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     try {
       await apiRequest("POST", "/api/auth/signup", {
+        username,
         email,
         password,
         firstName,
@@ -76,12 +86,12 @@ export default function Landing() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                data-testid="input-email"
+                data-testid="input-username"
               />
               <Input
                 type="password"
@@ -129,6 +139,14 @@ export default function Landing() {
             <form onSubmit={handleSignup} className="space-y-4">
               <Input
                 type="text"
+                placeholder="Username (min 3 characters)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                data-testid="input-username"
+              />
+              <Input
+                type="text"
                 placeholder="First Name (optional)"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -143,10 +161,9 @@ export default function Landing() {
               />
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder="Email (optional)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 data-testid="input-email"
               />
               <Input

@@ -50,15 +50,15 @@ export async function setupAuth(app: Express) {
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
-      const user = await storage.getUserByEmail(email);
+      const user = await storage.getUserByUsername(username);
       if (!user || !verifyPassword(password, user.password)) {
-        return res.status(401).json({ message: "Invalid email or password" });
+        return res.status(401).json({ message: "Invalid username or password" });
       }
 
       (req.session as any).userId = user.id;
@@ -71,6 +71,7 @@ export async function setupAuth(app: Express) {
 
       res.json({
         id: user.id,
+        username: user.username,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -83,24 +84,29 @@ export async function setupAuth(app: Express) {
 
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { username, email, password, firstName, lastName } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
       if (password.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters" });
       }
 
-      const existingUser = await storage.getUserByEmail(email);
+      if (username.length < 3) {
+        return res.status(400).json({ message: "Username must be at least 3 characters" });
+      }
+
+      const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
+        return res.status(400).json({ message: "Username already taken" });
       }
 
       const hashedPassword = hashPassword(password);
       const user = await storage.upsertUser({
-        email,
+        username,
+        email: email || null,
         password: hashedPassword,
         firstName: firstName || "",
         lastName: lastName || "",
@@ -116,6 +122,7 @@ export async function setupAuth(app: Express) {
 
       res.json({
         id: user.id,
+        username: user.username,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,

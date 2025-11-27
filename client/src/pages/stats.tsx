@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, ArrowUp, ArrowDown } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import type { Player } from "@shared/schema";
 
@@ -30,9 +30,14 @@ interface PlayerStat {
   ownedPercentage: number;
 }
 
+type SortField = "price" | "owned" | "goals" | "assists" | "yellow" | "red" | "days" | "penalties" | "conceded" | "points";
+type SortDirection = "asc" | "desc";
+
 export default function Stats() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [sortField, setSortField] = useState<SortField>("price");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -52,6 +57,99 @@ export default function Stats() {
     queryKey: ["/api/stats"],
     enabled: isAuthenticated,
   });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "desc" ? "asc" : "desc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  };
+
+  const getSortedStats = () => {
+    if (!stats) return [];
+
+    const sorted = [...stats].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case "price":
+          aValue = parseFloat(a.player.price);
+          bValue = parseFloat(b.player.price);
+          break;
+        case "owned":
+          aValue = a.ownedPercentage;
+          bValue = b.ownedPercentage;
+          break;
+        case "goals":
+          aValue = a.goals;
+          bValue = b.goals;
+          break;
+        case "assists":
+          aValue = a.assists;
+          bValue = b.assists;
+          break;
+        case "yellow":
+          aValue = a.yellowCards;
+          bValue = b.yellowCards;
+          break;
+        case "red":
+          aValue = a.redCards;
+          bValue = b.redCards;
+          break;
+        case "days":
+          aValue = a.daysPlayed;
+          bValue = b.daysPlayed;
+          break;
+        case "penalties":
+          aValue = a.penaltiesMissed;
+          bValue = b.penaltiesMissed;
+          break;
+        case "conceded":
+          aValue = a.goalsConceded;
+          bValue = b.goalsConceded;
+          break;
+        case "points":
+          aValue = a.points;
+          bValue = b.points;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortDirection === "desc") {
+        return bValue - aValue;
+      } else {
+        return aValue - bValue;
+      }
+    });
+
+    return sorted;
+  };
+
+  const SortableHeader = ({ field, label }: { field: SortField; label: string }) => {
+    const isActive = sortField === field;
+    return (
+      <TableHead 
+        className="text-center cursor-pointer hover:bg-muted/50" 
+        onClick={() => handleSort(field)}
+        data-testid={`sort-${field}`}
+      >
+        <div className="flex items-center justify-center gap-1">
+          {label}
+          {isActive && (
+            sortDirection === "desc" ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUp className="h-3 w-3" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -91,21 +189,21 @@ export default function Stats() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Player</TableHead>
-                    <TableHead className="text-center">Price</TableHead>
-                    <TableHead className="text-center">% Owned</TableHead>
-                    <TableHead className="text-center">Goals</TableHead>
-                    <TableHead className="text-center">Assists</TableHead>
-                    <TableHead className="text-center">Yellow</TableHead>
-                    <TableHead className="text-center">Red</TableHead>
+                    <SortableHeader field="price" label="Price" />
+                    <SortableHeader field="owned" label="% Owned" />
+                    <SortableHeader field="goals" label="Goals" />
+                    <SortableHeader field="assists" label="Assists" />
+                    <SortableHeader field="yellow" label="Yellow" />
+                    <SortableHeader field="red" label="Red" />
                     <TableHead className="text-center">MOTM</TableHead>
-                    <TableHead className="text-center">Days Played</TableHead>
-                    <TableHead className="text-center">Penalties Missed</TableHead>
-                    <TableHead className="text-center">Goals Conceded</TableHead>
-                    <TableHead className="text-center">Points</TableHead>
+                    <SortableHeader field="days" label="Days Played" />
+                    <SortableHeader field="penalties" label="Penalties Missed" />
+                    <SortableHeader field="conceded" label="Goals Conceded" />
+                    <SortableHeader field="points" label="Points" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[...stats].sort((a, b) => parseFloat(b.player.price) - parseFloat(a.player.price)).map((stat) => (
+                  {getSortedStats().map((stat) => (
                     <TableRow key={stat.player.id} data-testid={`stat-row-${stat.player.name.toLowerCase().replace(' ', '-')}`}>
                       <TableCell>
                         <div className="flex items-center gap-2">

@@ -181,66 +181,66 @@ export function AppSidebar() {
         </Button>
 
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle>Settings</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="w-[95vw] sm:max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="py-2">
+              <DialogTitle className="text-lg sm:text-xl">Settings</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Manage your preferences and account
               </DialogDescription>
             </DialogHeader>
             
             {/* Tab Navigation */}
-            <div className="flex gap-2 border-b">
+            <div className="flex gap-1 sm:gap-2 border-b overflow-x-auto -mx-6 px-6">
               <Button
                 variant={activeTab === "theme" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTab("theme")}
-                className="flex-1"
+                className="flex-1 min-w-max text-xs sm:text-sm"
               >
-                <Moon className="h-4 w-4 mr-1" />
-                Theme
+                <Moon className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Theme</span>
               </Button>
               <Button
                 variant={activeTab === "account" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTab("account")}
-                className="flex-1"
+                className="flex-1 min-w-max text-xs sm:text-sm"
               >
-                <Users className="h-4 w-4 mr-1" />
-                Account
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Account</span>
               </Button>
               <Button
                 variant={activeTab === "help" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTab("help")}
-                className="flex-1"
+                className="flex-1 min-w-max text-xs sm:text-sm"
               >
-                <HelpCircle className="h-4 w-4 mr-1" />
-                Help
+                <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Help</span>
               </Button>
               <Button
                 variant={activeTab === "about" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTab("about")}
-                className="flex-1"
+                className="flex-1 min-w-max text-xs sm:text-sm"
               >
-                <Info className="h-4 w-4 mr-1" />
-                About
+                <Info className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">About</span>
               </Button>
             </div>
 
             {/* Theme Tab */}
             {activeTab === "theme" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-md border">
-                  <div className="flex items-center gap-3">
+              <div className="space-y-3 sm:space-y-4 py-2">
+                <div className="flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md border">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     {theme === "light" ? (
-                      <Sun className="h-5 w-5" />
+                      <Sun className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                     ) : (
-                      <Moon className="h-5 w-5" />
+                      <Moon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                     )}
-                    <div>
-                      <p className="text-sm font-medium">Theme</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-medium">Theme</p>
                       <p className="text-xs text-muted-foreground">
                         {theme === "light" ? "Light Mode" : "Dark Mode"}
                       </p>
@@ -251,6 +251,7 @@ export function AppSidebar() {
                     size="sm"
                     onClick={toggleTheme}
                     data-testid="button-toggle-theme"
+                    className="text-xs sm:text-sm flex-shrink-0"
                   >
                     {theme === "light" ? "Dark" : "Light"}
                   </Button>
@@ -260,35 +261,35 @@ export function AppSidebar() {
 
             {/* Account Tab */}
             {activeTab === "account" && (
-              <div className="space-y-4">
-                <div className="space-y-3 p-3 rounded-md border bg-muted/30">
+              <div className="space-y-3 sm:space-y-4 py-2">
+                <div className="space-y-2 sm:space-y-3 p-2 sm:p-3 rounded-md border bg-muted/30">
                   <div>
                     <p className="text-xs text-muted-foreground">Username</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm font-medium truncate">{userData?.username || 'N/A'}</p>
+                    <div className="flex items-center gap-2 mt-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium truncate">{userData?.username || 'N/A'}</p>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0"
                         onClick={handleCopyUsername}
                         data-testid="button-copy-username"
                       >
                         {copied ? (
-                          <Check className="h-4 w-4 text-green-600" />
+                          <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                         ) : (
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                         )}
                       </Button>
                     </div>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Team Name</p>
-                    <p className="text-sm font-medium mt-1">{userData?.teamName || 'No team yet'}</p>
+                    <p className="text-xs sm:text-sm font-medium mt-1 break-words">{userData?.teamName || 'No team yet'}</p>
                   </div>
                   {userData?.firstName && (
                     <div>
                       <p className="text-xs text-muted-foreground">Display Name</p>
-                      <p className="text-sm font-medium mt-1">
+                      <p className="text-xs sm:text-sm font-medium mt-1 break-words">
                         {userData.firstName} {userData.lastName || ''}
                       </p>
                     </div>
@@ -299,21 +300,21 @@ export function AppSidebar() {
 
             {/* Help Tab */}
             {activeTab === "help" && (
-              <div className="space-y-3 text-sm">
+              <div className="space-y-2 sm:space-y-3 py-2">
                 <div>
-                  <p className="font-medium mb-1">Squad Building</p>
+                  <p className="text-xs sm:text-sm font-medium mb-0.5">Squad Building</p>
                   <p className="text-xs text-muted-foreground">Build a 5-a-side team with 1 bench player. Min budget is £50M.</p>
                 </div>
                 <div>
-                  <p className="font-medium mb-1">Transfers</p>
+                  <p className="text-xs sm:text-sm font-medium mb-0.5">Transfers</p>
                   <p className="text-xs text-muted-foreground">Get 1 free transfer per gameweek. Additional transfers cost 2 points.</p>
                 </div>
                 <div>
-                  <p className="font-medium mb-1">Chips</p>
+                  <p className="text-xs sm:text-sm font-medium mb-0.5">Chips</p>
                   <p className="text-xs text-muted-foreground">Triple Captain (3x points) and Bench Boost (6 active players) available once per season.</p>
                 </div>
                 <div>
-                  <p className="font-medium mb-1">Leagues</p>
+                  <p className="text-xs sm:text-sm font-medium mb-0.5">Leagues</p>
                   <p className="text-xs text-muted-foreground">Create or join leagues to compete with friends.</p>
                 </div>
               </div>
@@ -321,9 +322,9 @@ export function AppSidebar() {
 
             {/* About Tab */}
             {activeTab === "about" && (
-              <div className="space-y-3 text-sm">
+              <div className="space-y-2 sm:space-y-3 py-2">
                 <div>
-                  <p className="font-medium">Fantasy Mini League</p>
+                  <p className="text-xs sm:text-sm font-medium">Fantasy Mini League</p>
                   <p className="text-xs text-muted-foreground mt-1">v1.0.0</p>
                 </div>
                 <div>

@@ -193,6 +193,7 @@ export const createTeamSchema = z.object({
     playerId: z.string(),
     isCaptain: z.boolean(),
     isOnBench: z.boolean(),
+    position: z.number().int().nonnegative(),
   })),
 });
 

@@ -57,6 +57,22 @@ export default function Landing() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username) {
+      toast({
+        title: "Error",
+        description: "Please enter a username or email",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!password) {
+      toast({
+        title: "Error",
+        description: "Please enter your password",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     try {
       await apiRequest("POST", "/api/auth/login", { username, password });
@@ -64,9 +80,10 @@ export default function Landing() {
       toast({ title: "Success", description: "Logged in successfully" });
       window.location.href = "/";
     } catch (error: any) {
+      const message = typeof error.message === "string" ? error.message : "Login failed";
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {

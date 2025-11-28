@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express) {
           userId, 
           budget: String(budget), 
           freeTransfers: 1,
-          firstGameweekId: currentGameweek?.id || "",
+          firstGameweekId: currentGameweek?.id || null,
         });
       } else if (isAdmin && parseFloat(team.budget || "50") !== budget) {
         // Update existing admin team to have correct budget

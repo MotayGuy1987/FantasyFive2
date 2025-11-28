@@ -200,10 +200,22 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
                             setTeamSearch("");
                             setTeamPopoverOpen(false);
                           }}
-                          className="w-full text-left px-2 py-1.5 rounded-md text-xs sm:text-sm hover-elevate"
+                          className="w-full text-left px-2 py-1.5 rounded-md text-xs sm:text-sm hover-elevate flex items-center gap-2"
                           data-testid={`team-option-${team}`}
                         >
-                          {team}
+                          {TEAM_LOGOS[team] ? (
+                            <img
+                              src={TEAM_LOGOS[team]}
+                              alt={team}
+                              className="w-5 h-5 object-contain flex-shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-5 h-5 flex-shrink-0 bg-muted rounded" />
+                          )}
+                          <span className="truncate">{team}</span>
                         </button>
                       ))}
                     </div>

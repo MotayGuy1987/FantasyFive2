@@ -9,6 +9,45 @@ import { eq } from "drizzle-orm";
 import { teamPlayers, gameweekScores, createTeamSchema, users } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 
+// Calculate points dynamically from performance data based on player position
+function calculatePerformancePoints(playerPosition: string, perf: any): number {
+  let points = 0;
+
+  const position = playerPosition.toUpperCase();
+  const goals = perf.goals || 0;
+  const assists = perf.assists || 0;
+  const yellowCards = perf.yellowCards || 0;
+  const redCards = perf.redCards || 0;
+  const straightRed = perf.straightRed || false;
+  const isMotm = perf.isMotm || false;
+
+  // Goal points based on position
+  if (position === "DEF") {
+    points += goals * 6;
+  } else if (position === "MID") {
+    points += goals * 5;
+  } else if (position === "FWD") {
+    points += goals * 5;
+  }
+
+  // Assist points (same for all)
+  points += assists * 3;
+
+  // Card points (same for all)
+  points -= yellowCards * 1;
+  points -= redCards * 2;
+  if (straightRed) {
+    points -= 3;
+  }
+
+  // MOTM bonus (same for all)
+  if (isMotm) {
+    points += 3;
+  }
+
+  return Math.max(0, points); // Ensure points never go below 0
+}
+
 export async function registerRoutes(app: Express) {
   await setupAuth(app);
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -315,6 +354,9 @@ export async function registerRoutes(app: Express) {
         const ownedCount = playerOwnershipMap[player.id] || 0;
         const ownedPercentage = (ownedCount / totalTeams) * 100;
         
+        // Calculate points dynamically from performance data
+        const points = playerPerfs.reduce((sum, p) => sum + calculatePerformancePoints(player.position, p), 0);
+        
         return {
           player,
           goals: playerPerfs.reduce((sum, p) => sum + (p.goals || 0), 0),
@@ -325,7 +367,7 @@ export async function registerRoutes(app: Express) {
           daysPlayed: playerPerfs.reduce((sum, p) => sum + (p.daysPlayed || 0), 0),
           penaltiesMissed: playerPerfs.reduce((sum, p) => sum + (p.penaltiesMissed || 0), 0),
           goalsConceded: playerPerfs.reduce((sum, p) => sum + (p.goalsConceded || 0), 0),
-          points: playerPerfs.reduce((sum, p) => sum + (p.points || 0), 0),
+          points,
           ownedPercentage,
         };
       });
@@ -773,7 +815,21 @@ export async function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Invalid performance data", errors: validation.error.errors });
       }
 
-      const perf = await storage.upsertPlayerPerformance(validation.data);
+      // Get player to determine position for point calculation
+      const player = await storage.getPlayer(validation.data.playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      // Calculate points dynamically
+      const points = calculatePerformancePoints(player.position, validation.data);
+
+      const perfData = {
+        ...validation.data,
+        points,
+      };
+
+      const perf = await storage.upsertPlayerPerformance(perfData);
       res.json(perf);
     } catch (error) {
       console.error("Error creating player performance:", error);
@@ -861,18 +917,30 @@ export async function registerRoutes(app: Express) {
 
       // Create/update all player performances
       for (const perf of performances) {
-        await storage.upsertPlayerPerformance({
-          playerId: perf.playerId,
-          gameweekId,
-          goals: perf.goals || 0,
-          assists: perf.assists || 0,
-          yellowCards: perf.yellowCards || 0,
-          redCards: perf.redCards || 0,
-          isMotm: perf.isMotm || false,
-          daysPlayed: perf.daysPlayed || 0,
-          penaltiesMissed: perf.penaltiesMissed || 0,
-          goalsConceded: perf.goalsConceded || 0,
-        });
+        // Get player to determine position for point calculation
+        const player = await storage.getPlayer(perf.playerId);
+        if (player) {
+          const perfData = {
+            playerId: perf.playerId,
+            gameweekId,
+            goals: perf.goals || 0,
+            assists: perf.assists || 0,
+            yellowCards: perf.yellowCards || 0,
+            redCards: perf.redCards || 0,
+            isMotm: perf.isMotm || false,
+            daysPlayed: perf.daysPlayed || 0,
+            penaltiesMissed: perf.penaltiesMissed || 0,
+            goalsConceded: perf.goalsConceded || 0,
+          };
+          
+          // Calculate points dynamically
+          const points = calculatePerformancePoints(player.position, perfData);
+          
+          await storage.upsertPlayerPerformance({
+            ...perfData,
+            points,
+          });
+        }
       }
 
       // Update player prices

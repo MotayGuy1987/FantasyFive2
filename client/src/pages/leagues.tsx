@@ -488,7 +488,6 @@ export default function Leagues() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16">Rank</TableHead>
-                      <TableHead className="w-12">Avatar</TableHead>
                       <TableHead>Team Name</TableHead>
                       <TableHead className="text-right">GW Points</TableHead>
                       <TableHead className="text-right">Total Points</TableHead>
@@ -502,18 +501,6 @@ export default function Leagues() {
                             <Trophy className="h-4 w-4 text-primary inline-block mr-1" />
                           )}
                           {entry.rank}
-                        </TableCell>
-                        <TableCell className="flex justify-center">
-                          <div 
-                            className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{
-                              backgroundColor: entry.avatarBgColor || "#dbeafe",
-                              color: entry.avatarPersonColor || "#3b82f6",
-                            }}
-                            data-testid={`avatar-${entry.userId}`}
-                          >
-                            <UserIcon className="h-4 w-4" />
-                          </div>
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1 min-w-0">

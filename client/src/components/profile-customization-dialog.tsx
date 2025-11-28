@@ -133,29 +133,23 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
           {/* Team Logo Preview */}
           <div className="flex justify-center mb-6">
             {favoriteTeam && TEAM_LOGOS[favoriteTeam] ? (
-              <div className="relative w-24 h-24">
-                <img
-                  src={TEAM_LOGOS[favoriteTeam]}
-                  alt={favoriteTeam}
-                  className="w-24 h-24 rounded-full object-contain border-2 border-primary/20 p-2"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = 'none';
-                    const fallback = e.currentTarget.parentElement?.querySelector('[data-avatar-fallback]') as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-                <div 
-                  data-avatar-fallback
-                  className="absolute inset-0 w-24 h-24 rounded-full flex items-center justify-center bg-muted hidden"
-                >
-                  <p className="text-xs text-muted-foreground text-center px-2">Select a team</p>
-                </div>
-              </div>
-            ) : (
-              <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
-                <p className="text-xs text-muted-foreground text-center px-2">Select a team</p>
-              </div>
-            )}
+              <img
+                src={TEAM_LOGOS[favoriteTeam]}
+                alt={favoriteTeam}
+                className="w-24 h-24 rounded-full object-contain border-2 border-primary/20 p-2"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                  const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className="w-24 h-24 rounded-full flex items-center justify-center bg-muted"
+              style={{ display: (favoriteTeam && TEAM_LOGOS[favoriteTeam]) ? 'none' : 'flex' }}
+            >
+              <p className="text-xs text-muted-foreground text-center px-2">Select a team</p>
+            </div>
           </div>
 
           {/* Nationality */}

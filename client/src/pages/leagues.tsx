@@ -504,69 +504,42 @@ export default function Leagues() {
                           {entry.rank}
                         </TableCell>
                         <TableCell className="flex justify-center">
-                          <div className="relative h-8 w-8">
-                            {entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam] ? (
-                              <>
-                                <img
-                                  src={TEAM_LOGOS[entry.favoriteTeam]}
-                                  alt={entry.favoriteTeam}
-                                  className="h-8 w-8 rounded-full object-cover absolute inset-0"
-                                  data-testid={`team-logo-${entry.userId}`}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLElement).style.display = 'none';
-                                    const fallback = e.currentTarget.parentElement?.querySelector('[data-leaderboard-fallback]') as HTMLElement;
-                                    if (fallback) fallback.style.display = 'flex';
-                                  }}
-                                />
-                                <div 
-                                  data-leaderboard-fallback
-                                  className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 hidden absolute inset-0"
-                                  style={{
-                                    backgroundColor: entry.avatarBgColor || "#dbeafe",
-                                    color: entry.avatarPersonColor || "#3b82f6",
-                                  }}
-                                  data-testid={`avatar-${entry.userId}`}
-                                >
-                                  <UserIcon className="h-4 w-4" />
-                                </div>
-                              </>
-                            ) : entry.profileImageUrl ? (
-                              <>
-                                <img
-                                  src={entry.profileImageUrl}
-                                  alt={entry.firstName}
-                                  className="h-8 w-8 rounded-full object-cover absolute inset-0"
-                                  data-testid={`profile-image-${entry.userId}`}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLElement).style.display = 'none';
-                                    const fallback = e.currentTarget.parentElement?.querySelector('[data-profile-fallback]') as HTMLElement;
-                                    if (fallback) fallback.style.display = 'flex';
-                                  }}
-                                />
-                                <div 
-                                  data-profile-fallback
-                                  className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 hidden absolute inset-0"
-                                  style={{
-                                    backgroundColor: entry.avatarBgColor || "#dbeafe",
-                                    color: entry.avatarPersonColor || "#3b82f6",
-                                  }}
-                                  data-testid={`avatar-${entry.userId}`}
-                                >
-                                  <UserIcon className="h-4 w-4" />
-                                </div>
-                              </>
-                            ) : (
-                              <div 
-                                className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                style={{
-                                  backgroundColor: entry.avatarBgColor || "#dbeafe",
-                                  color: entry.avatarPersonColor || "#3b82f6",
-                                }}
-                                data-testid={`avatar-${entry.userId}`}
-                              >
-                                <UserIcon className="h-4 w-4" />
-                              </div>
-                            )}
+                          {entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam] ? (
+                            <img
+                              src={TEAM_LOGOS[entry.favoriteTeam]}
+                              alt={entry.favoriteTeam}
+                              className="h-8 w-8 rounded-full object-cover"
+                              data-testid={`team-logo-${entry.userId}`}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          {entry.profileImageUrl && (!entry.favoriteTeam || !TEAM_LOGOS[entry.favoriteTeam]) ? (
+                            <img
+                              src={entry.profileImageUrl}
+                              alt={entry.firstName}
+                              className="h-8 w-8 rounded-full object-cover"
+                              data-testid={`profile-image-${entry.userId}`}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{
+                              backgroundColor: entry.avatarBgColor || "#dbeafe",
+                              color: entry.avatarPersonColor || "#3b82f6",
+                              display: (entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam]) || entry.profileImageUrl ? 'none' : 'flex',
+                            }}
+                            data-testid={`avatar-${entry.userId}`}
+                          >
+                            <UserIcon className="h-4 w-4" />
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">

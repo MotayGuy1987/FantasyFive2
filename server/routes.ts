@@ -63,6 +63,7 @@ export async function registerRoutes(app: Express) {
         avatarBgColor: user.avatarBgColor,
         nationality: user.nationality,
         favoriteTeam: user.favoriteTeam,
+        teamName: user.teamName,
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -84,6 +85,17 @@ export async function registerRoutes(app: Express) {
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update session with new data
+      if (req.user) {
+        req.user.avatarPersonColor = updatedUser.avatarPersonColor || req.user.avatarPersonColor;
+        req.user.avatarBgColor = updatedUser.avatarBgColor || req.user.avatarBgColor;
+        req.user.nationality = updatedUser.nationality || req.user.nationality;
+        req.user.favoriteTeam = updatedUser.favoriteTeam || req.user.favoriteTeam;
+        req.session.save((err) => {
+          if (err) console.error("Error saving session:", err);
+        });
       }
 
       res.json(updatedUser);

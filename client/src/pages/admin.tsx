@@ -212,6 +212,37 @@ export default function Admin() {
     },
   });
 
+  const unactivateGameweekMutation = useMutation({
+    mutationFn: async (gameweekId: string) => {
+      await apiRequest("POST", "/api/admin/unactivate-gameweek", { gameweekId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gameweeks"] });
+      toast({
+        title: "Success",
+        description: "Gameweek unactivated!",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const endGameweekMutation = useMutation({
     mutationFn: async (gameweekId: string) => {
       await apiRequest("POST", "/api/admin/end-gameweek", { gameweekId });
@@ -487,14 +518,25 @@ export default function Admin() {
               </Select>
             </div>
             {selectedGameweek && (
-              <Button
-                onClick={() => activateGameweekMutation.mutate(selectedGameweek)}
-                disabled={activateGameweekMutation.isPending}
-                className="w-full"
-                data-testid="button-activate-gameweek"
-              >
-                {activateGameweekMutation.isPending ? "Activating..." : "Activate Gameweek"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => activateGameweekMutation.mutate(selectedGameweek)}
+                  disabled={activateGameweekMutation.isPending}
+                  className="w-full"
+                  data-testid="button-activate-gameweek"
+                >
+                  {activateGameweekMutation.isPending ? "Activating..." : "Activate Gameweek"}
+                </Button>
+                <Button
+                  onClick={() => unactivateGameweekMutation.mutate(selectedGameweek)}
+                  disabled={unactivateGameweekMutation.isPending}
+                  variant="outline"
+                  className="w-full"
+                  data-testid="button-unactivate-gameweek"
+                >
+                  {unactivateGameweekMutation.isPending ? "Unactivating..." : "Unactivate Gameweek"}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

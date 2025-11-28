@@ -821,6 +821,30 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/unactivate-gameweek", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.user.email !== "admin@admin.com") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { gameweekId } = req.body;
+      if (!gameweekId) {
+        return res.status(400).json({ message: "gameweekId is required" });
+      }
+
+      const gameweek = await storage.getGameweek(gameweekId);
+      if (!gameweek) {
+        return res.status(404).json({ message: "Gameweek not found" });
+      }
+
+      await storage.updateGameweek(gameweekId, { isActive: false });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unactivating gameweek:", error);
+      res.status(500).json({ message: "Failed to unactivate gameweek" });
+    }
+  });
+
   app.post("/api/admin/performances", isAuthenticated, async (req: any, res) => {
     try {
       if (req.user.email !== "admin@admin.com") {

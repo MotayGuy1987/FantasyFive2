@@ -46,6 +46,12 @@ export function getSession() {
 
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
+  if (!process.env.DATABASE_URL) {
+    console.error("CRITICAL: DATABASE_URL environment variable is not set");
+  }
+  if (!process.env.SESSION_SECRET) {
+    console.error("CRITICAL: SESSION_SECRET environment variable is not set");
+  }
   app.use(getSession());
 
   app.post("/api/auth/login", async (req, res) => {
@@ -58,21 +64,37 @@ export async function setupAuth(app: Express) {
 
       // Check if input is an email or username
       let user;
-      if (username.includes("@")) {
-        user = await storage.getUserByEmail(username);
-      } else {
-        user = await storage.getUserByUsername(username);
+      try {
+        if (username.includes("@")) {
+          console.log(`Login: Looking up user by email: ${username}`);
+          user = await storage.getUserByEmail(username);
+        } else {
+          console.log(`Login: Looking up user by username: ${username}`);
+          user = await storage.getUserByUsername(username);
+        }
+      } catch (dbError) {
+        console.error("Database lookup error:", dbError);
+        throw new Error(`Database error: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
       }
 
-      if (!user || !verifyPassword(password, user.password)) {
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      if (!verifyPassword(password, user.password)) {
         return res.status(401).json({ message: "Invalid username/email or password" });
       }
 
       (req.session as any).userId = user.id;
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            console.log("Login successful, session saved");
+            resolve();
+          }
         });
       });
 
@@ -106,25 +128,43 @@ export async function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username must be at least 3 characters" });
       }
 
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already taken" });
+      try {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser) {
+          return res.status(400).json({ message: "Username already taken" });
+        }
+      } catch (dbError) {
+        console.error("Database check error:", dbError);
+        throw new Error(`Database error during username check: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
       }
 
       const hashedPassword = hashPassword(password);
-      const user = await storage.upsertUser({
-        username,
-        email: email || null,
-        password: hashedPassword,
-        firstName: firstName || "",
-        lastName: lastName || "",
-      });
+      let user;
+      try {
+        console.log(`Signup: Creating user with username: ${username}`);
+        user = await storage.upsertUser({
+          username,
+          email: email || null,
+          password: hashedPassword,
+          firstName: firstName || "",
+          lastName: lastName || "",
+        });
+        console.log(`Signup: User created successfully: ${user.id}`);
+      } catch (dbError) {
+        console.error("User creation error:", dbError);
+        throw new Error(`Database error during user creation: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+      }
 
       (req.session as any).userId = user.id;
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            console.log("Signup successful, session saved");
+            resolve();
+          }
         });
       });
 

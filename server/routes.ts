@@ -190,6 +190,9 @@ export async function registerRoutes(app: Express) {
           freeTransfers: 1,
           firstGameweekId: currentGameweek?.id || undefined,
         });
+      } else if (isAdmin && parseFloat(team.budget) !== budget) {
+        // Update existing admin team to have correct budget
+        team = await storage.updateTeam(team.id, { budget: String(budget) });
       }
 
       await storage.deleteTeamPlayers(team.id);

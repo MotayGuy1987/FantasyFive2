@@ -506,7 +506,7 @@ export const TEAM_LOGOS: Record<string, string> = {
   "Real Madrid": "https://tmssl.akamaized.net/images/logo/normal/25.png",
   "Barcelona": "https://tmssl.akamaized.net/images/logo/normal/131.png",
   "Atlético Madrid": "https://tmssl.akamaized.net/images/logo/normal/125.png",
-  "Valencia": "https://tmssl.akamaized.net/images/logo/normal/131.png",
+  "Valencia": "https://tmssl.akamaized.net/images/logo/normal/152.png",
   "Sevilla": "https://tmssl.akamaized.net/images/logo/normal/137.png",
   "Villarreal": "https://tmssl.akamaized.net/images/logo/normal/2814.png",
   "Real Sociedad": "https://tmssl.akamaized.net/images/logo/normal/2852.png",

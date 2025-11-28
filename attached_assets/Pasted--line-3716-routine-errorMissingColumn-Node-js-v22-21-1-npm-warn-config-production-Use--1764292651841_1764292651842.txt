@@ -1,0 +1,61 @@
+  line: '3716',
+  routine: 'errorMissingColumn'
+Node.js v22.21.1
+}
+npm warn config production Use `--omit=dev` instead.
+  file: 'parse_relation.c',
+  line: '3716',
+  where: undefined,
+  routine: 'errorMissingColumn'
+}
+  schema: undefined,
+Signup error: Error: Database error during username check: column "username" does not exist
+  table: undefined,
+    at file:///app/dist/index.js:628:15
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+Database check error: error: column "username" does not exist
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getUserByUsername (file:///app/dist/index.js:202:20)
+    at async file:///app/dist/index.js:622:30 {
+  length: 108,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+1:15:55 AM [express] POST /api/auth/signup 500 in 180ms :: {"message":"Signup failed: Database error…
+Database check error: error: column "username" does not exist
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getUserByUsername (file:///app/dist/index.js:202:20)
+    at async file:///app/dist/index.js:622:30 {
+  length: 108,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+Signup error: Error: Database error during username check: column "username" does not exist
+    at file:///app/dist/index.js:628:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+1:16:10 AM [express] POST /api/auth/signup 500 in 68ms :: {"message":"Signup failed: Database error …

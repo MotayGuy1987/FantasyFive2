@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express) {
     try {
       const userId = req.user.id;
       const userRecord = await storage.getUser(userId);
-      const isAdmin = userRecord?.email === "admin@admin.com";
+      const isAdmin = userRecord?.email === "admin@admin.com" || userRecord?.username === "admin";
       const budget = isAdmin ? 1000.0 : 50.0;
       
       const validation = createTeamSchema.safeParse(req.body);
@@ -750,7 +750,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/transfers/:transferId/confirm", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -764,7 +764,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/player-performance", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -783,7 +783,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/gameweek", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -802,7 +802,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/activate-gameweek", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -826,7 +826,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/unactivate-gameweek", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -850,7 +850,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/performances", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -895,7 +895,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/end-gameweek", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -920,7 +920,7 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/admin/teams-users", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -943,7 +943,7 @@ export async function registerRoutes(app: Express) {
 
   app.delete("/api/admin/team/:teamId", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -962,7 +962,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/admin/user/:userId/reset-password", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -991,7 +991,7 @@ export async function registerRoutes(app: Express) {
 
   app.patch("/api/admin/user/:userId/username", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -1022,7 +1022,7 @@ export async function registerRoutes(app: Express) {
 
   app.delete("/api/admin/user/:userId", isAuthenticated, async (req: any, res) => {
     try {
-      if (req.user.email !== "admin@admin.com") {
+      if (req.user.email !== "admin@admin.com" && req.user.username !== "admin") {
         return res.status(403).json({ message: "Unauthorized" });
       }
 

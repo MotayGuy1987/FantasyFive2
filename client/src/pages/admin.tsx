@@ -63,7 +63,7 @@ export default function Admin() {
   const [pendingDeleteTeamId, setPendingDeleteTeamId] = useState<string | null>(null);
   const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
 
-  const isAdmin = user && typeof user === 'object' && user !== null && 'email' in user && (user as any).email === "admin@admin.com";
+  const isAdmin = user && typeof user === 'object' && user !== null && ('email' in user && (user as any).email === "admin@admin.com" || 'username' in user && (user as any).username === "admin");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {

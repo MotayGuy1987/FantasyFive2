@@ -167,15 +167,16 @@ export function AppSidebar() {
                   className="h-8 w-8 rounded-full object-contain flex-shrink-0"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
                   }}
                 />
-              ) : (
-                <Avatar className="h-8 w-8 flex-shrink-0">
-                  <AvatarFallback>
-                    <span>{userData.firstName?.[0] || userData.email?.[0] || 'U'}</span>
-                  </AvatarFallback>
-                </Avatar>
-              )}
+              ) : null}
+              <Avatar className="h-8 w-8 flex-shrink-0" style={{ display: (userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam]) ? 'none' : 'flex' }}>
+                <AvatarFallback>
+                  <span>{userData.firstName?.[0] || userData.email?.[0] || 'U'}</span>
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1 min-w-0">
                   <p className="text-sm font-medium truncate">

@@ -80,7 +80,10 @@ export function ProfileCustomizationDialog({ open, onOpenChange, user }: Profile
         nationality,
         favoriteTeam,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Invalidate all auth and leagues-related queries to refresh user data everywhere
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/leagues"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/leagues", undefined, "leaderboard"] });
       toast({ title: "Success", description: "Profile updated successfully!" });
       onOpenChange(false);
     } catch (error: any) {

@@ -45,7 +45,7 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
     points += 3;
   }
 
-  return Math.max(0, points); // Ensure points never go below 0
+  return points;
 }
 
 export async function registerRoutes(app: Express) {

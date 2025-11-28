@@ -20,7 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/hooks/useTheme.tsx";
 import { ProfileCustomizationDialog } from "@/components/profile-customization-dialog";
-import { COUNTRY_FLAGS, TEAM_LOGOS } from "@/lib/teams";
+import { COUNTRY_FLAGS } from "@/lib/teams";
 import type { User } from "@shared/schema";
 import {
   Dialog,
@@ -160,19 +160,7 @@ export function AppSidebar() {
               className="flex items-center gap-3 flex-1 rounded-md p-2 hover-elevate border border-muted-foreground/30 cursor-pointer"
               data-testid="button-profile-customize"
             >
-              {userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam] ? (
-                <img
-                  src={TEAM_LOGOS[userData.favoriteTeam]}
-                  alt={userData.favoriteTeam}
-                  className="h-8 w-8 rounded-full object-contain flex-shrink-0"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = 'none';
-                    const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <Avatar className="h-8 w-8 flex-shrink-0" style={{ display: (userData.favoriteTeam && TEAM_LOGOS[userData.favoriteTeam]) ? 'none' : 'flex' }}>
+              <Avatar className="h-8 w-8 flex-shrink-0">
                 <AvatarFallback>
                   <span>{userData.firstName?.[0] || userData.email?.[0] || 'U'}</span>
                 </AvatarFallback>

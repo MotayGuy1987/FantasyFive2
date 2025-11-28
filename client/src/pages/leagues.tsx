@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trophy, Plus, LogIn, Copy, Check, Trash2, User as UserIcon } from "lucide-react";
-import { COUNTRY_FLAGS, TEAM_LOGOS } from "@/lib/teams";
+import { COUNTRY_FLAGS } from "@/lib/teams";
 import type { League, Team, Gameweek, User } from "@shared/schema";
 
 interface LeaderboardEntry {
@@ -504,38 +504,11 @@ export default function Leagues() {
                           {entry.rank}
                         </TableCell>
                         <TableCell className="flex justify-center">
-                          {entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam] ? (
-                            <img
-                              src={TEAM_LOGOS[entry.favoriteTeam]}
-                              alt={entry.favoriteTeam}
-                              className="h-8 w-8 rounded-full object-cover"
-                              data-testid={`team-logo-${entry.userId}`}
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          {entry.profileImageUrl && (!entry.favoriteTeam || !TEAM_LOGOS[entry.favoriteTeam]) ? (
-                            <img
-                              src={entry.profileImageUrl}
-                              alt={entry.firstName}
-                              className="h-8 w-8 rounded-full object-cover"
-                              data-testid={`profile-image-${entry.userId}`}
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
                           <div 
                             className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
                             style={{
                               backgroundColor: entry.avatarBgColor || "#dbeafe",
                               color: entry.avatarPersonColor || "#3b82f6",
-                              display: (entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam]) || entry.profileImageUrl ? 'none' : 'flex',
                             }}
                             data-testid={`avatar-${entry.userId}`}
                           >

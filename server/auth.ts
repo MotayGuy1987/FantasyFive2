@@ -27,7 +27,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -85,7 +85,8 @@ export async function setupAuth(app: Express) {
       });
     } catch (error) {
       console.error("Login error:", error);
-      res.status(500).json({ message: "Login failed" });
+      const errorMsg = error instanceof Error ? error.message : "Login failed";
+      res.status(500).json({ message: `Login failed: ${errorMsg}` });
     }
   });
 
@@ -136,7 +137,8 @@ export async function setupAuth(app: Express) {
       });
     } catch (error) {
       console.error("Signup error:", error);
-      res.status(500).json({ message: "Signup failed" });
+      const errorMsg = error instanceof Error ? error.message : "Signup failed";
+      res.status(500).json({ message: `Signup failed: ${errorMsg}` });
     }
   });
 

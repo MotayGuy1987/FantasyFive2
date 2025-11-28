@@ -89,7 +89,9 @@ export async function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid username/email or password" });
       }
 
-      if (!verifyPassword(password, user.password)) {
+      const isPasswordValid = verifyPassword(password, user.password);
+      console.log(`Login: Password check for ${username}: valid=${isPasswordValid}, hasPassword=${!!user.password}, passwordLength=${user.password?.length || 0}`);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid username/email or password" });
       }
 

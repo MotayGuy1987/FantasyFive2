@@ -75,6 +75,8 @@ export async function registerRoutes(app: Express) {
     try {
       const { avatarPersonColor, avatarBgColor, nationality, favoriteTeam } = req.body;
       const userId = req.user.id;
+      
+      console.log("Profile update request:", { avatarPersonColor, avatarBgColor, nationality, favoriteTeam });
 
       const updatedUser = await storage.updateUserProfile(userId, {
         avatarPersonColor,
@@ -87,6 +89,12 @@ export async function registerRoutes(app: Express) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      console.log("Profile updated in database:", { 
+        userId, 
+        favoriteTeam: updatedUser.favoriteTeam,
+        nationality: updatedUser.nationality 
+      });
+
       // Update session with new data
       if (req.user) {
         req.user.avatarPersonColor = updatedUser.avatarPersonColor || req.user.avatarPersonColor;
@@ -98,7 +106,18 @@ export async function registerRoutes(app: Express) {
         });
       }
 
-      res.json(updatedUser);
+      res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        avatarPersonColor: updatedUser.avatarPersonColor,
+        avatarBgColor: updatedUser.avatarBgColor,
+        nationality: updatedUser.nationality,
+        favoriteTeam: updatedUser.favoriteTeam,
+        teamName: updatedUser.teamName,
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });

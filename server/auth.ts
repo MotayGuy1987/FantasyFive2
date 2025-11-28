@@ -89,9 +89,7 @@ export async function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid username/email or password" });
       }
 
-      const isPasswordValid = verifyPassword(password, user.password);
-      console.log(`Login: Password check for ${username}: valid=${isPasswordValid}, hasPassword=${!!user.password}, passwordLength=${user.password?.length || 0}`);
-      if (!isPasswordValid) {
+      if (!verifyPassword(password, user.password)) {
         return res.status(401).json({ message: "Invalid username/email or password" });
       }
 
@@ -205,16 +203,13 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const userId = (req.session as any)?.userId;
-  const sessionId = req.sessionID;
 
   if (!userId) {
-    console.log(`[Auth] No userId in session. SessionID: ${sessionId}, Cookies: ${JSON.stringify(req.headers.cookie)}`);
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const user = await storage.getUser(userId);
   if (!user) {
-    console.log(`[Auth] User not found. UserID: ${userId}, SessionID: ${sessionId}`);
     return res.status(401).json({ message: "Unauthorized" });
   }
 

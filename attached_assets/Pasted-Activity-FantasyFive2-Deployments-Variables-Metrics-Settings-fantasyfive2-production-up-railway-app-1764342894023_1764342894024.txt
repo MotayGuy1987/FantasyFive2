@@ -1,0 +1,128 @@
+Activity
+
+FantasyFive2
+Deployments
+Variables
+Metrics
+Settings
+fantasyfive2-production.up.railway.app
+us-east4-eqdc4a
+1 Replica
+
+HISTORY
+FantasyFive2
+/
+1c65e434
+Active
+
+Nov 27, 2025 at 9:15 PM
+fantasyfive2-production.up.railway.app
+Details
+Build Logs
+Deploy Logs
+HTTP Logs
+Filter and search logs
+
+4:18:09 AM [express] GET /api/team 304 in 64ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:18:09 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 9ms
+4:18:19 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 39ms
+4:18:24 AM [express] GET /api/team 304 in 50ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:18:29 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 11ms
+4:18:32 AM [express] GET /api/user/first-name-cooldown 304 in 23ms :: {"canEdit":true}
+4:18:39 AM [express] GET /api/auth/user 304 in 19ms :: {"id":"bfd7d8a0-9fe2-4f02-83e5-741d2f55c2a2",…
+4:18:39 AM [express] PATCH /api/user/profile 200 in 25ms :: {"id":"bfd7d8a0-9fe2-4f02-83e5-741d2f55c…
+4:18:39 AM [express] GET /api/team 304 in 66ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:18:39 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 12ms
+4:18:42 AM [express] GET /api/gameweek/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e/player-performances 304 …
+4:18:42 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 12ms
+4:18:42 AM [express] GET /api/players 304 in 26ms :: [{"id":"04a5407e-e48e-43c8-b1ab-47bde80f1a2e","…
+4:18:43 AM [express] GET /api/transfers 304 in 30ms :: []
+4:18:44 AM [express] GET /api/user/first-name-cooldown 304 in 23ms :: {"canEdit":true}
+4:19:20 AM [express] GET /api/team 304 in 66ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:19:20 AM [express] GET /api/dashboard/player-of-week 304 in 14ms
+4:19:20 AM [express] GET /api/dashboard/team-of-week 304 in 29ms
+4:19:20 AM [express] GET /api/chips 304 in 39ms
+4:19:20 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 39ms
+4:19:30 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 28ms
+4:19:35 AM [express] GET /api/team 304 in 47ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:19:40 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 9ms
+4:19:50 AM [express] GET /api/team 304 in 45ms :: {"id":"88878036-698c-4cc0-8627-d7a165f0fadc","user…
+4:19:50 AM [express] GET /api/team/gameweek-score/cc2599c0-a63b-4c1b-951c-3e48bd96dd8e 304 in 8ms
+Failed to prune sessions: AggregateError [ETIMEDOUT]: 
+    at /app/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PGStore._asyncQuery (/app/node_modules/connect-pg-simple/index.js:322:21) {
+  code: 'ETIMEDOUT',
+  [errors]: [
+    Error: connect ETIMEDOUT 54.156.15.30:5432
+        at createConnectionError (node:net:1678:14)
+        at Timeout.internalConnectMultipleTimeout (node:net:1737:38)
+        at listOnTimeout (node:internal/timers:590:11)
+        at process.processTimers (node:internal/timers:523:7) {
+      errno: -110,
+      code: 'ETIMEDOUT',
+      syscall: 'connect',
+      address: '54.156.15.30',
+      port: 5432
+    },
+    Error: connect ETIMEDOUT 44.198.216.75:5432
+        at createConnectionError (node:net:1678:14)
+        at Timeout.internalConnectMultipleTimeout (node:net:1737:38)
+        at listOnTimeout (node:internal/timers:590:11)
+        at process.processTimers (node:internal/timers:523:7) {
+      errno: -110,
+      code: 'ETIMEDOUT',
+      syscall: 'connect',
+      address: '44.198.216.75',
+      port: 5432
+    },
+    Error: connect ETIMEDOUT 3.218.140.61:5432
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -110,
+      code: 'ETIMEDOUT',
+      syscall: 'connect',
+      address: '3.218.140.61',
+      port: 5432
+    }
+  ]
+}
+Failed to prune sessions: AggregateError [ETIMEDOUT]: 
+    at /app/node_modules/pg-pool/index.js:45:11
+        at listOnTimeout (node:internal/timers:590:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at process.processTimers (node:internal/timers:523:7) {
+    at async PGStore._asyncQuery (/app/node_modules/connect-pg-simple/index.js:322:21) {
+  code: 'ETIMEDOUT',
+      errno: -110,
+  [errors]: [
+      code: 'ETIMEDOUT',
+    Error: connect ETIMEDOUT 44.198.216.75:5432
+        at createConnectionError (node:net:1678:14)
+        at Timeout.internalConnectMultipleTimeout (node:net:1737:38)
+        at listOnTimeout (node:internal/timers:590:11)
+        at process.processTimers (node:internal/timers:523:7) {
+      errno: -110,
+      code: 'ETIMEDOUT',
+      syscall: 'connect',
+      address: '44.198.216.75',
+      port: 5432
+    },
+    Error: connect ETIMEDOUT 3.218.140.61:5432
+        at createConnectionError (node:net:1678:14)
+        at Timeout.internalConnectMultipleTimeout (node:net:1737:38)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -110,
+      code: 'ETIMEDOUT',
+      syscall: 'connect',
+      syscall: 'connect',
+      address: '54.156.15.30',
+      address: '3.218.140.61',
+      port: 5432
+    }
+      port: 5432
+  ]
+    },
+}
+    Error: connect ETIMEDOUT 54.156.15.30:5432
+        at createConnectionError (node:net:1678:14)

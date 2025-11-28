@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express) {
         req.user.avatarBgColor = updatedUser.avatarBgColor || req.user.avatarBgColor;
         req.user.nationality = updatedUser.nationality || req.user.nationality;
         req.user.favoriteTeam = updatedUser.favoriteTeam || req.user.favoriteTeam;
-        req.session.save((err) => {
+        req.session.save((err: any) => {
           if (err) console.error("Error saving session:", err);
         });
       }
@@ -258,9 +258,9 @@ export async function registerRoutes(app: Express) {
           userId, 
           budget: String(budget), 
           freeTransfers: 1,
-          firstGameweekId: currentGameweek?.id || undefined,
+          firstGameweekId: currentGameweek?.id || "",
         });
-      } else if (isAdmin && parseFloat(team.budget) !== budget) {
+      } else if (isAdmin && parseFloat(team.budget || "50") !== budget) {
         // Update existing admin team to have correct budget
         team = await storage.updateTeam(team.id, { budget: String(budget) });
       }
@@ -516,7 +516,7 @@ export async function registerRoutes(app: Express) {
     try {
       const userId = req.user.id;
       
-      const validation = createTransferSchema.safeParse(req.body);
+      const validation = insertTransferSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ message: "Invalid transfer data", errors: validation.error.errors });
       }
@@ -545,9 +545,9 @@ export async function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Player not found" });
       }
 
-      const budget = parseFloat(team.budget);
-      const playerInPrice = parseFloat(playerIn.price);
-      const playerOutPrice = parseFloat(playerOutObj.price);
+      const budget = parseFloat(team.budget || "50");
+      const playerInPrice = parseFloat(playerIn.price || "0");
+      const playerOutPrice = parseFloat(playerOutObj.price || "0");
       const remainingBudget = budget - (playerInPrice - playerOutPrice);
 
       if (remainingBudget < 0) {
@@ -806,13 +806,13 @@ export async function registerRoutes(app: Express) {
       }
 
       const bestTeam = teamScores.reduce((max, ts) => ts.points > max.points ? ts : max);
-      if (bestTeam.points === 0) {
+      if (bestTeam.points === 0 || !bestTeam.user) {
         return res.json({ team: null, user: null, points: 0, message: "N/A" });
       }
 
       res.json({ 
         team: bestTeam.team, 
-        user: { firstName: bestTeam.user.firstName, email: bestTeam.user.email },
+        user: { firstName: bestTeam.user?.firstName || "", email: bestTeam.user?.email || "" },
         points: bestTeam.points 
       });
     } catch (error) {
@@ -841,7 +841,7 @@ export async function registerRoutes(app: Express) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
-      const validation = createPlayerPerformanceSchema.safeParse(req.body);
+      const validation = insertPlayerPerformanceSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ message: "Invalid performance data", errors: validation.error.errors });
       }

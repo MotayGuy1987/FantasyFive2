@@ -511,8 +511,8 @@ export default function Leagues() {
                               className="h-8 w-8 rounded-full object-cover"
                               data-testid={`team-logo-${entry.userId}`}
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextElementSibling;
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
                                 if (fallback) fallback.style.display = 'flex';
                               }}
                             />
@@ -524,8 +524,8 @@ export default function Leagues() {
                               className="h-8 w-8 rounded-full object-cover"
                               data-testid={`profile-image-${entry.userId}`}
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextElementSibling;
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
                                 if (fallback) fallback.style.display = 'flex';
                               }}
                             />

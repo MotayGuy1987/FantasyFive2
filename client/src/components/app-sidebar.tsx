@@ -166,8 +166,8 @@ export function AppSidebar() {
                   alt={userData.favoriteTeam}
                   className="h-8 w-8 rounded-full object-contain flex-shrink-0"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.nextElementSibling;
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
                     if (fallback) fallback.style.display = 'flex';
                   }}
                 />

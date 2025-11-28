@@ -25,6 +25,13 @@ function verifyPassword(password: string, hash: string | null): boolean {
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
   const pgStore = connectPg(session);
+  
+  // Log session configuration for debugging
+  const isProduction = process.env.NODE_ENV === "production";
+  const hasRailwayEnv = !!process.env.RAILWAY_ENVIRONMENT_NAME;
+  const secureFlag = isProduction || hasRailwayEnv;
+  console.log(`[Session] NODE_ENV=${process.env.NODE_ENV}, RAILWAY=${hasRailwayEnv}, secure=${secureFlag}`);
+  
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
@@ -35,10 +42,10 @@ export function getSession() {
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: secureFlag,
       sameSite: "lax",
       maxAge: sessionTtl,
     },

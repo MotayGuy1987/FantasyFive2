@@ -18,8 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, Search, AlertTriangle, Repeat } from "lucide-react";
+import { Users, Search, AlertTriangle, Repeat, X } from "lucide-react";
 import type { Team, Player, TeamPlayer, Gameweek } from "@shared/schema";
+
+interface PendingTransfer {
+  id: string;
+  out: Player;
+  in: Player;
+}
 
 export default function Transfers() {
   const { toast } = useToast();
@@ -27,7 +33,8 @@ export default function Transfers() {
   const [selectedOut, setSelectedOut] = useState<Player | null>(null);
   const [selectedIn, setSelectedIn] = useState<Player | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [transferConfirmOpen, setTransferConfirmOpen] = useState(false);
+  const [pendingTransfers, setPendingTransfers] = useState<PendingTransfer[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -69,24 +76,27 @@ export default function Transfers() {
   });
 
   const makeTransferMutation = useMutation({
-    mutationFn: async (data: { playerOutId: string; playerInId: string; gameweekId: string }) => {
-      const response = await fetch("/api/transfers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error(await response.text());
+    mutationFn: async (transfers: { playerOutId: string; playerInId: string; gameweekId: string }[]) => {
+      for (const transfer of transfers) {
+        const response = await fetch("/api/transfers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(transfer),
+        });
+        if (!response.ok) throw new Error(await response.text());
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/team"] });
       queryClient.invalidateQueries({ queryKey: ["/api/team/players"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transfers"] });
+      setPendingTransfers([]);
       setSelectedOut(null);
       setSelectedIn(null);
-      setTransferConfirmOpen(false);
+      setConfirmOpen(false);
       toast({
         title: "Success",
-        description: "Transfer completed successfully!",
+        description: `${pendingTransfers.length} transfer(s) completed successfully!`,
       });
     },
     onError: (error: Error) => {
@@ -128,11 +138,22 @@ export default function Transfers() {
     );
   }
 
+  const selectedPlayerIds = new Set([
+    ...pendingTransfers.flatMap(t => [t.out.id, t.in.id]),
+    selectedOut?.id,
+    selectedIn?.id,
+  ].filter(Boolean));
+
   const selectedPlayers = existingTeamPlayers.map(tp => tp.player);
   const benchPlayerId = existingTeamPlayers.find(tp => tp.isOnBench)?.playerId ?? null;
-  const sortedSelectedPlayers = [...selectedPlayers].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  const usedPlayerOutIds = new Set(pendingTransfers.map(t => t.out.id));
+  const usedPlayerInIds = new Set(pendingTransfers.map(t => t.in.id));
   
-  const available = players?.filter(p => !selectedPlayers.some(sp => sp.id === p.id)) || [];
+  const sortedSelectedPlayers = [...selectedPlayers]
+    .filter(p => !usedPlayerOutIds.has(p.id))
+    .sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  
+  const available = players?.filter(p => !selectedPlayers.some(sp => sp.id === p.id) && !usedPlayerInIds.has(p.id)) || [];
   const sortedAvailable = available
     .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
@@ -142,10 +163,25 @@ export default function Transfers() {
   const totalBudget = 50.0;
   const budgetRemain = totalBudget - totalSpent;
 
-  const canMakeTransfer = selectedOut && selectedIn;
-  const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut, selectedIn, selectedPlayers, benchPlayerId) : null;
+  const canAddTransfer = selectedOut && selectedIn;
+  const transferValidation = selectedOut && selectedIn ? validateTransfer(selectedOut, selectedIn, selectedPlayers.filter(p => !usedPlayerOutIds.has(p.id)), benchPlayerId) : null;
 
-  const transferCost = freeTransfers === 0 ? -2 : 0;
+  const addTransfer = () => {
+    if (!canAddTransfer || !transferValidation?.canTransfer) return;
+    
+    const newTransferId = `${selectedOut.id}-${selectedIn.id}`;
+    setPendingTransfers([...pendingTransfers, { id: newTransferId, out: selectedOut, in: selectedIn }]);
+    setSelectedOut(null);
+    setSelectedIn(null);
+  };
+
+  const removeTransfer = (id: string) => {
+    setPendingTransfers(pendingTransfers.filter(t => t.id !== id));
+  };
+
+  const totalTransferCost = pendingTransfers.length > 0 
+    ? (freeTransfers >= pendingTransfers.length ? 0 : (pendingTransfers.length - freeTransfers) * -2)
+    : 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -167,7 +203,7 @@ export default function Transfers() {
               {freeTransfers >= 999 ? "∞" : freeTransfers}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {freeTransfers >= 999 ? "Unlimited this week" : (freeTransfers === 0 ? "Next transfer: -2 pts" : "Available")}
+              {freeTransfers >= 999 ? "Unlimited this week" : (freeTransfers === 0 ? "Pending transfers: -2 pts each" : "Available")}
             </div>
           </div>
         </Card>
@@ -184,11 +220,11 @@ export default function Transfers() {
         </Card>
       </div>
 
-      {transferCost < 0 && (
+      {totalTransferCost < 0 && (
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            You have no free transfers remaining. This transfer will cost {transferCost} points.
+            {pendingTransfers.length} transfer(s) will cost {totalTransferCost} points total.
           </AlertDescription>
         </Alert>
       )}
@@ -323,81 +359,134 @@ export default function Transfers() {
 
             <div className="pt-4">
               <Button
-                onClick={() => setTransferConfirmOpen(true)}
-                disabled={!canMakeTransfer}
+                onClick={addTransfer}
+                disabled={!canAddTransfer || !transferValidation?.canTransfer}
                 className="w-full"
-                data-testid="button-open-confirm-transfer"
+                data-testid="button-add-transfer"
               >
-                Review Transfer
+                Add Transfer to Queue
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <Dialog open={transferConfirmOpen} onOpenChange={setTransferConfirmOpen}>
+      {pendingTransfers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Transfers ({pendingTransfers.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              {pendingTransfers.map((transfer) => (
+                <div key={transfer.id} className="border rounded-md p-3 bg-muted/50">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">OUT</div>
+                        <div className="font-medium">{transfer.out.name}</div>
+                      </div>
+                      <Repeat className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">IN</div>
+                        <div className="font-medium">{transfer.in.name}</div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => removeTransfer(transfer.id)}
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0"
+                      data-testid={`button-remove-transfer-${transfer.id}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={() => setPendingTransfers([])}
+                variant="outline"
+                className="flex-1"
+                data-testid="button-clear-all"
+              >
+                Clear All
+              </Button>
+              <Button
+                onClick={() => setConfirmOpen(true)}
+                className="flex-1"
+                data-testid="button-confirm-all-transfers"
+              >
+                Confirm All Transfers
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Transfer</DialogTitle>
+            <DialogTitle>Confirm {pendingTransfers.length} Transfer(s)</DialogTitle>
             <DialogDescription>
-              Are you sure you want to proceed with this transfer?
+              Are you sure you want to proceed with these transfers?
             </DialogDescription>
           </DialogHeader>
-          {selectedOut && selectedIn && (
-            <div className="space-y-4">
-              <div className="border rounded-md p-4 bg-muted/50">
-                <div className="flex items-center justify-center gap-4 text-center">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">OUT</div>
-                    <div className="font-bold">{selectedOut.name}</div>
-                    <div className="text-xs text-muted-foreground">£{selectedOut.price}M - {selectedOut.position}</div>
-                  </div>
-                  <Repeat className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">IN</div>
-                    <div className="font-bold">{selectedIn.name}</div>
-                    <div className="text-xs text-muted-foreground">£{selectedIn.price}M - {selectedIn.position}</div>
+          <div className="space-y-4">
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {pendingTransfers.map((transfer, idx) => (
+                <div key={transfer.id} className="border rounded-md p-3 bg-muted/50 text-sm">
+                  <div className="font-medium mb-1">Transfer {idx + 1}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-red-600 dark:text-red-400">{transfer.out.name}</div>
+                    <Repeat className="h-3 w-3" />
+                    <div className="text-green-600 dark:text-green-400">{transfer.in.name}</div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                  <span className="text-sm">Transfer Cost</span>
-                  <span className={`font-mono font-bold ${transferCost >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {transferCost >= 0 ? "Free" : `${transferCost} pts`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setTransferConfirmOpen(false)}
-                  variant="outline"
-                  className="flex-1"
-                  data-testid="button-cancel-confirm"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (currentGameweek) {
-                      makeTransferMutation.mutate({
-                        playerOutId: selectedOut.id,
-                        playerInId: selectedIn.id,
-                        gameweekId: currentGameweek.id,
-                      });
-                    }
-                  }}
-                  disabled={makeTransferMutation.isPending}
-                  className="flex-1"
-                  data-testid="button-confirm-transfer"
-                >
-                  {makeTransferMutation.isPending ? "Confirming..." : "Confirm Transfer"}
-                </Button>
+            <div className="border rounded-md p-3 bg-muted/50">
+              <div className="flex justify-between items-center text-sm">
+                <span>Total Cost</span>
+                <span className={`font-mono font-bold ${totalTransferCost >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {totalTransferCost >= 0 ? "Free" : `${totalTransferCost} pts`}
+                </span>
               </div>
             </div>
-          )}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setConfirmOpen(false)}
+                variant="outline"
+                className="flex-1"
+                data-testid="button-cancel-confirm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (currentGameweek) {
+                    makeTransferMutation.mutate(
+                      pendingTransfers.map(t => ({
+                        playerOutId: t.out.id,
+                        playerInId: t.in.id,
+                        gameweekId: currentGameweek.id,
+                      }))
+                    );
+                  }
+                }}
+                disabled={makeTransferMutation.isPending}
+                className="flex-1"
+                data-testid="button-confirm-all"
+              >
+                {makeTransferMutation.isPending ? "Confirming..." : "Confirm All"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

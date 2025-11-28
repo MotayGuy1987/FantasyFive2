@@ -1,0 +1,103 @@
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+Node.js v22.21.1
+npm warn config production Use `--omit=dev` instead.
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+1:24:30 AM [express] serving on port 8080
+  file: 'parse_relation.c',
+file:///app/node_modules/@neondatabase/serverless/index.mjs:1345
+o?t(o):n(u)},"cb"),s=new r(function(o,u){n=o,t=u}).catch(o=>{throw Error.captureStackTrace(
+                                                                         ^
+error: column "username" does not exist
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getUser (file:///app/dist/index.js:194:20)
+    at async isAuthenticated (file:///app/dist/index.js:686:16) {
+  length: 108,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+Node.js v22.21.1
+npm warn config production Use `--omit=dev` instead.
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+1:24:34 AM [express] serving on port 8080
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getUser (file:///app/dist/index.js:194:20)
+    at async isAuthenticated (file:///app/dist/index.js:686:16) {
+  length: 108,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+file:///app/node_modules/@neondatabase/serverless/index.mjs:1345
+o?t(o):n(u)},"cb"),s=new r(function(o,u){n=o,t=u}).catch(o=>{throw Error.captureStackTrace(
+  where: undefined,
+                                                                         ^
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+error: column "username" does not exist
+  constraint: undefined,
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+  file: 'parse_relation.c',
+Node.js v22.21.1
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+npm warn config production Use `--omit=dev` instead.
+1:24:37 AM [express] serving on port 8080
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+Database check error: error: column "username" does not exist
+Signup error: Error: Database error during username check: column "username" does not exist
+    at file:///app/dist/index.js:628:15
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getUserByUsername (file:///app/dist/index.js:202:20)
+    at async file:///app/dist/index.js:622:30 {
+  length: 108,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

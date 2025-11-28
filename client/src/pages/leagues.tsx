@@ -510,26 +510,37 @@ export default function Leagues() {
                               alt={entry.favoriteTeam}
                               className="h-8 w-8 rounded-full object-cover"
                               data-testid={`team-logo-${entry.userId}`}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
                             />
-                          ) : entry.profileImageUrl ? (
+                          ) : null}
+                          {entry.profileImageUrl && (!entry.favoriteTeam || !TEAM_LOGOS[entry.favoriteTeam]) ? (
                             <img
                               src={entry.profileImageUrl}
                               alt={entry.firstName}
                               className="h-8 w-8 rounded-full object-cover"
                               data-testid={`profile-image-${entry.userId}`}
-                            />
-                          ) : (
-                            <div 
-                              className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
-                              style={{
-                                backgroundColor: entry.avatarBgColor || "#dbeafe",
-                                color: entry.avatarPersonColor || "#3b82f6",
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling;
+                                if (fallback) fallback.style.display = 'flex';
                               }}
-                              data-testid={`avatar-${entry.userId}`}
-                            >
-                              <UserIcon className="h-4 w-4" />
-                            </div>
-                          )}
+                            />
+                          ) : null}
+                          <div 
+                            className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{
+                              backgroundColor: entry.avatarBgColor || "#dbeafe",
+                              color: entry.avatarPersonColor || "#3b82f6",
+                              display: (entry.favoriteTeam && TEAM_LOGOS[entry.favoriteTeam]) || entry.profileImageUrl ? 'none' : 'flex',
+                            }}
+                            data-testid={`avatar-${entry.userId}`}
+                          >
+                            <UserIcon className="h-4 w-4" />
+                          </div>
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1 min-w-0">

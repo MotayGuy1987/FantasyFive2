@@ -280,6 +280,13 @@ export async function registerRoutes(app: Express) {
       // Save team name to user record (one-time only, can't be changed)
       if (userRecord && !userRecord.teamName) {
         await storage.updateUserTeamName(userId, teamName);
+        // Update session with team name
+        if (req.user) {
+          req.user.teamName = teamName;
+          req.session.save((err: any) => {
+            if (err) console.error("Error saving session:", err);
+          });
+        }
       }
 
       const overallLeague = await storage.getOrCreateOverallLeague();
@@ -312,6 +319,14 @@ export async function registerRoutes(app: Express) {
       const updatedUser = await storage.updateUserTeamName(userId, teamName);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update session with new team name
+      if (req.user) {
+        req.user.teamName = teamName;
+        req.session.save((err: any) => {
+          if (err) console.error("Error saving session:", err);
+        });
       }
 
       res.json(updatedUser);

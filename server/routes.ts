@@ -1,31 +1,53 @@
-// Updated server/routes.ts
+// Replace calculatePerformancePoints(...) with this in server/routes.ts and call aggregation helper
 
-import express from 'express';
-import { calculatePerformanceScore } from './utils/performance';
-import { aggregateTeamScores } from './utils/aggregation';
+import { aggregateAndUpsertTeamScores } from "./utils/scoreAggregation";
 
-const router = express.Router();
+function calculatePerformancePoints(playerPosition: string, perf: any): number {
+  let points = 0;
 
-// Endpoint to perform performance scoring
-router.post('/performance', (req, res) => {
-    const { players } = req.body;
-    if (!players || players.length === 0) {
-        return res.status(400).json({ error: 'No players provided' });
-    }
+  const position = String(playerPosition || "").toLowerCase();
+  const goals = perf.goals || 0;
+  const assists = perf.assists || 0;
+  const yellowCards = perf.yellowCards || 0;
+  const redCards = perf.redCards || 0;
+  const straightRed = perf.straightRed || false;
+  const isMotm = perf.isMotm || false;
+  const daysPlayed = perf.daysPlayed || 0;
 
-    const scores = players.map(player => calculatePerformanceScore(player));
-    res.json({ scores });
-});
+  // Goal points based on position (accept full names and common abbreviations)
+  if (position.includes("def")) {
+    points += goals * 6;
+  } else if (position.includes("mid")) {
+    points += goals * 5;
+  } else if (position.includes("for") || position.includes("fwd")) {
+    points += goals * 5;
+  } else {
+    // default to 5 per goal for unknown/other positions
+    points += goals * 5;
+  }
 
-// Endpoint to aggregate team scores
-router.post('/aggregate-scores', (req, res) => {
-    const { teams } = req.body;
-    if (!teams || teams.length === 0) {
-        return res.status(400).json({ error: 'No teams provided' });
-    }
+  // Assists
+  points += assists * 3;
 
-    const aggregatedScores = aggregateTeamScores(teams);
-    res.json({ aggregatedScores });
-});
+  // Cards
+  points -= yellowCards * 1;
+  points -= redCards * 3;
+  if (straightRed) {
+    points -= 3;
+  }
 
-export default router;
+  // MOTM
+  if (isMotm) points += 3;
+
+  // Days-played bonus: 1-3 -> +1, 4+ -> +2
+  if (daysPlayed >= 1 && daysPlayed <= 3) {
+    points += 1;
+  } else if (daysPlayed >= 4) {
+    points += 2;
+  }
+
+  return points;
+}
+
+// In POST /api/admin/performances handler, after upserting performances and updating prices, add:
+// try { await aggregateAndUpsertTeamScores(gameweekId); } catch (aggErr) { console.error("Error aggregating team scores:", aggErr); }

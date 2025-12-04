@@ -21,4 +21,5 @@ function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Re
     motm: (perf.isMotm ? 1 : 0) * multipliers.motm,
     daysPlayed: daysPlayedPoints,
   };
+  export default MyTeam;
 }

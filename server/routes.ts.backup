@@ -8,12 +8,7 @@ import { db } from "./db";
 import { teamPlayers } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 
-const isAuthenticated = (req: Request, res: Response, next: any) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  next();
-};
+
 
 export function registerRoutes(app: Express): Server {
   app.post("/api/auth/register", async (req: any, res) => {

@@ -8,7 +8,7 @@ import { db } from "./db";
 import { teamPlayers } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 import { aggregateAndUpsertTeamScores } from "./utils/scoreAggregation";
-
+import { createTeamSchema } from "@shared/schema";
 // Remove the duplicate isAuthenticated declaration since it's imported from "./auth"
 
 function calculatePerformancePoints(playerPosition: string, perf: any): number {

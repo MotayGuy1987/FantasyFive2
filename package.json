@@ -117,4 +117,10 @@
     "dev:server": "tsx watch --env-file=.env --clear-screen=false server/index-dev.ts"
   }
 }
+{
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
 }

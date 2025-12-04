@@ -15,7 +15,7 @@ const isAuthenticated = (req: Request, res: Response, next: any) => {
   next();
 };
 
-export function setupRoutes(app: Express) {
+export function registerRoutes(app: Express): Server {
   app.post("/api/auth/register", async (req: any, res) => {
     try {
       const { email, password, username } = req.body;

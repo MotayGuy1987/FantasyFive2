@@ -106,4 +106,15 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   }
+  {
+  "scripts": {
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --mode production",
+    "build:server": "tsx build.ts",
+    "start": "node --env-file=.env dist/index.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch --env-file=.env --clear-screen=false server/index-dev.ts"
+  }
+}
 }

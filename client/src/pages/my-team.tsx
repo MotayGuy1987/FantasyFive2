@@ -12,7 +12,7 @@ function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Re
   } else if (days >= 4) {
     daysPlayedPoints = 2;
   }
-
+//pushpa
   return {
     goals: (perf.goals || 0) * multipliers.goal,
     assists: (perf.assists || 0) * multipliers.assist,

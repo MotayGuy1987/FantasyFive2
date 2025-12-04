@@ -6,7 +6,11 @@ import express, { type Express } from "express";
 import runApp from "./app";
 
 export async function serveStatic(app: Express, _server: Server) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Fix: Use the correct path where Vite builds the files
+  const distPath = path.resolve(process.cwd(), "dist/public");
+  
+  console.log("Looking for static files in:", distPath); // Debug log
+  console.log("Directory exists:", fs.existsSync(distPath)); // Debug log
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -16,7 +20,7 @@ export async function serveStatic(app: Express, _server: Server) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
+  // Catch-all handler: serve index.html for any route
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });

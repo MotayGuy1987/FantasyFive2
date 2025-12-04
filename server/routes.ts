@@ -5,11 +5,9 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 import { db } from "./db";
-import { teamPlayers } from "@shared/schema";
+import { teamPlayers, createTeamSchema } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 import { aggregateAndUpsertTeamScores } from "./utils/scoreAggregation";
-import { createTeamSchema } from "@shared/schema";
-// Remove the duplicate isAuthenticated declaration since it's imported from "./auth"
 
 function calculatePerformancePoints(playerPosition: string, perf: any): number {
   let points = 0;
@@ -29,25 +27,17 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
   } else if (position.includes("mid")) {
     points += goals * 5;
   } else if (position.includes("for") || position.includes("fwd")) {
-    points += goals * 5;
+    points += goals * 4;
   } else {
     points += goals * 5;
   }
 
-  // Assists
   points += assists * 3;
-
-  // Cards
   points -= yellowCards * 1;
   points -= redCards * 3;
-  if (straightRed) {
-    points -= 3;
-  }
-
-  // MOTM
+  if (straightRed) points -= 3;
   if (isMotm) points += 3;
 
-  // Days-played bonus
   if (daysPlayed >= 1 && daysPlayed <= 3) {
     points += 1;
   } else if (daysPlayed >= 4) {
@@ -57,21 +47,8 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
   return points;
 }
 
-// Add the missing schema definitions
-const createTeamSchema = z.object({
-  teamName: z.string().min(1).max(30),
-  players: z.array(z.object({
-    playerId: z.string(),
-    isCaptain: z.boolean(),
-    isOnBench: z.boolean(),
-    position: z.string(),
-  })).length(5),
-});
-
 export function registerRoutes(app: Express): Server {
-  // Copy all the routes from the backup file here...
-  // [Include all the routes from the backup file - I'll provide the key ones]
-
+  // Auth routes
   app.post("/api/auth/register", async (req: any, res) => {
     try {
       const { email, password, username } = req.body;
@@ -113,10 +90,177 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // ... [Include all other routes from the backup file] ...
+  app.post("/api/auth/login", async (req: any, res) => {
+    try {
+      const { username, password } = req.body;
 
-  // At the end, create and return the server
-  const server = createServer(app);
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user || !user.password) {
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+
+      const [salt, hash] = user.password.split("$");
+      const crypto = require("crypto");
+      const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+
+      if (testHash !== hash) {
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+
+      req.logIn(user, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json({ message: "Login successful", user });
+      });
+    } catch (error) {
+      console.error("Error logging in:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: any, res) => {
+    req.logOut((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Player routes
+  app.get("/api/players", isAuthenticated, async (req, res) => {
+    try {
+      const players = await storage.getAllPlayers();
+      res.json(players);
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      res.status(500).json({ message: "Failed to fetch players" });
+    }
+  });
+
+  // Team routes
+  app.get("/api/team", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const team = await storage.getTeamByUserId(userId);
+      const user = await storage.getUser(userId);
+      
+      if (!team) {
+        return res.json(null);
+      }
+      
+      res.json({ ...team, teamName: user?.teamName });
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
+    }
+  });
+
+  app.post("/api/team", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRecord = await storage.getUser(userId);
+      const isAdmin = userRecord?.email === "admin@admin.com";
+      const budget = isAdmin ? 1000.0 : 50.0;
+      
+      const validation = createTeamSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid team data", errors: validation.error.errors });
+      }
+      
+      const { teamName, players: requestedPlayers } = validation.data;
+
+      const playerIds = requestedPlayers.map((p: any) => p.playerId);
+      const players = await Promise.all(
+        playerIds.map((id: string) => storage.getPlayer(id))
+      );
+
+      if (players.some((p) => !p)) {
+        return res.status(400).json({ message: "Invalid players" });
+      }
+
+      const totalCost = players.reduce((sum, p) => sum + parseFloat(p!.price), 0);
+      if (totalCost > budget) {
+        return res.status(400).json({ message: "Team exceeds budget" });
+      }
+
+      let team = await storage.getTeamByUserId(userId);
+      if (!team) {
+        const currentGameweek = await storage.getCurrentGameweek();
+        team = await storage.createTeam({ 
+          userId, 
+          budget: String(budget), 
+          freeTransfers: 1,
+          firstGameweekId: currentGameweek?.id || undefined,
+        });
+      }
+
+      await storage.deleteTeamPlayers(team.id);
+
+      for (const playerData of requestedPlayers) {
+        await storage.createTeamPlayer({
+          teamId: team.id,
+          playerId: playerData.playerId,
+          isCaptain: playerData.isCaptain,
+          isOnBench: playerData.isOnBench,
+          position: playerData.position,
+        });
+      }
+
+      if (userRecord && !userRecord.teamName) {
+        await storage.updateUserTeamName(userId, teamName);
+      }
+
+      res.json({ team, message: "Team created successfully" });
+    } catch (error) {
+      console.error("Error creating team:", error);
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  // Gameweek routes
+  app.get("/api/gameweeks", isAuthenticated, async (req, res) => {
+    try {
+      const gameweeks = await storage.getAllGameweeks();
+      res.json(gameweeks);
+    } catch (error) {
+      console.error("Error fetching gameweeks:", error);
+      res.status(500).json({ message: "Failed to fetch gameweeks" });
+    }
+  });
+
+  app.get("/api/gameweeks/current", isAuthenticated, async (req, res) => {
+    try {
+      const gameweek = await storage.getCurrentGameweek();
+      res.json(gameweek);
+    } catch (error) {
+      console.error("Error fetching current gameweek:", error);
+      res.status(500).json({ message: "Failed to fetch gameweek" });
+    }
+  });
+
+  // Basic health check route
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  // Setup authentication and create server
   setupAuth(app);
+  const server = createServer(app);
   return server;
 }

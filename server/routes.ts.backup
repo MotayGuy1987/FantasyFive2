@@ -5,7 +5,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { validateTransfer } from "./positionValidation";
 import { z } from "zod";
 import { db } from "./db";
-import { teamPlayers } from "@shared/schema";
+import { teamPlayers, createTeamSchema } from "@shared/schema";
 import { insertPlayerPerformanceSchema, insertTransferSchema, insertLeagueSchema } from "@shared/schema";
 
 
@@ -50,6 +50,8 @@ export function registerRoutes(app: Express): Server {
       console.error("Error registering user:", error);
       res.status(500).json({ message: "Registration failed" });
     }
+const server = createServer(app);
+return server;
   });
 
   app.post("/api/auth/login", async (req: any, res) => {

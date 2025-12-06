@@ -16,10 +16,13 @@ if (!root) {
 }
 
 console.log("🚀 main.tsx: Creating React root...");
-ReactDOM.createRoot(root).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
-
-console.log("🚀 main.tsx: React app mounted successfully");
+try {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+  console.log("🚀 main.tsx: React app mounted successfully");
+} catch (error) {
+  console.error("❌ Error mounting React app:", error);
+}

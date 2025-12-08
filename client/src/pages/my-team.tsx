@@ -1,22 +1,15 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowUpDown, Users, DollarSign, Trophy, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, DollarSign, Trophy, TrendingUp } from "lucide-react";
 import type { Team, Player, TeamPlayer, PlayerPerformance, Gameweek } from "@shared/schema";
 import { POINT_MULTIPLIERS } from "@/lib/teams";
 
 function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Record<string, number> {
   const multipliers = POINT_MULTIPLIERS[position as keyof typeof POINT_MULTIPLIERS] || POINT_MULTIPLIERS.Midfielder;
-
-  // days played points must match server rules:
-  // 1-3 days -> +1, 4+ days -> +2
   const days = perf.daysPlayed || 0;
   let daysPlayedPoints = 0;
   if (days >= 1 && days <= 3) {
@@ -36,7 +29,6 @@ function calculatePointsBreakdown(perf: PlayerPerformance, position: string): Re
 }
 
 export default function MyTeam() {
-  const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const [selectedGameweek, setSelectedGameweek] = useState<string | null>(null);
 
@@ -55,23 +47,6 @@ export default function MyTeam() {
     enabled: isAuthenticated,
   });
 
-  const { data: allGameweeks } = useQuery<Gameweek[]>({
-    queryKey: ["/api/gameweeks"],
-    enabled: isAuthenticated,
-  });
-
-  const activeGameweekId = selectedGameweek || currentGameweek?.id;
-
-  const { data: playerPerformances } = useQuery<(PlayerPerformance & { player: Player })[]>({
-    queryKey: ["/api/player-performances", activeGameweekId],
-    enabled: isAuthenticated && !!activeGameweekId,
-  });
-
-  const { data: teamScore } = useQuery<{ points: number }>({
-    queryKey: ["/api/team/gameweek-score", activeGameweekId],
-    enabled: isAuthenticated && !!activeGameweekId && !!team,
-  });
-
   if (!isAuthenticated) {
     return (
       <div className="p-6 text-center">
@@ -85,7 +60,6 @@ export default function MyTeam() {
       <div className="p-6 space-y-6">
         <Skeleton className="h-12 w-64" />
         <div className="grid gap-4">
-          <Skeleton className="h-32" />
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
         </div>
@@ -112,14 +86,6 @@ export default function MyTeam() {
     );
   }
 
-  const starters = teamPlayers.filter(tp => !tp.isOnBench);
-  const bench = teamPlayers.filter(tp => tp.isOnBench);
-  const captain = teamPlayers.find(tp => tp.isCaptain);
-
-  const playerPerformanceMap = new Map(
-    playerPerformances?.map(perf => [perf.playerId, perf]) || []
-  );
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -127,51 +93,70 @@ export default function MyTeam() {
           <h1 className="text-3xl font-bold">My Team</h1>
           <p className="text-muted-foreground">Manage your squad and view performance</p>
         </div>
-        {allGameweeks && allGameweeks.length > 0 && (
-          <select
-            value={selectedGameweek || currentGameweek?.id || ""}
-            onChange={(e) => setSelectedGameweek(e.target.value || null)}
-            className="px-3 py-2 border rounded-md bg-background"
-          >
-            {allGameweeks.map((gw) => (
-              <option key={gw.id} value={gw.id}>
-                Gameweek {gw.number} {gw.id === currentGameweek?.id ? "(Current)" : ""}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
-      {/* Team Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gameweek Points</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{teamScore?.points || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Points</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{team.totalPoints || 0}</div>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Free Transfers</CardTitle>
-            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{team.freeTransfers || 0}</div>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Team Value</CardTitle>
-            <DollarSign className="h-4
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">£{team.budget || 0}m</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Squad Size</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{teamPlayers.length}/5</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Squad Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {teamPlayers.map((tp) => (
+              <div key={tp.playerId} className="flex items-center justify-between p-3 border rounded">
+                <div className="flex items-center space-x-3">
+                  <div className="font-medium">{tp.player.name}</div>
+                  <div className="text-sm text-muted-foreground">{tp.player.position}</div>
+                  {tp.isCaptain && <div className="text-xs bg-yellow-100 px-2 py-1 rounded">Captain</div>}
+                  {tp.isOnBench && <div className="text-xs bg-gray-100 px-2 py-1 rounded">Bench</div>}
+                </div>
+                <div className="text-sm font-medium">£{tp.player.price}m</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

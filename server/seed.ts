@@ -102,3 +102,24 @@ seedDatabase()
     console.error("Seed script failed:", error);
     process.exit(1);
   });
+if (!existingAdmin) {
+  await db.insert(users).values({
+    id: "admin-user-id",
+    email: adminEmail,
+    username: "admin", // Add this line
+    password: hashPassword("admin1"),
+    firstName: "Admin",
+    lastName: "User",
+    profileImageUrl: null,
+  });
+  console.log("Created admin user");
+} else if (!existingAdmin.password || !existingAdmin.username) {
+  // Update existing admin user with password and username
+  await db.update(users)
+    .set({ 
+      password: hashPassword("admin1"),
+      username: "admin" // Add this line
+    })
+    .where(eq(users.email, adminEmail));
+  console.log("Updated admin user with password and username");
+}

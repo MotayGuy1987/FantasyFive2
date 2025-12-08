@@ -564,3 +564,27 @@ export const TEAM_LOGOS: Record<string, string> = {
   "AEK Athens": "",
   "Panathinaikos": "",
 };
+
+export const POINT_MULTIPLIERS = {
+  Defender: {
+    goal: 6,
+    assist: 3,
+    yellowCard: -1,
+    redCard: -3,
+    motm: 3
+  },
+  Midfielder: {
+    goal: 5,
+    assist: 3,
+    yellowCard: -1,
+    redCard: -3,
+    motm: 3
+  },
+  Forward: {
+    goal: 5,
+    assist: 3,
+    yellowCard: -1,
+    redCard: -3,
+    motm: 3
+  }
+};

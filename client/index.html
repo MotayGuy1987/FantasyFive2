@@ -11,29 +11,7 @@
     <meta name="description" content="Fantasy Premier League style 5-a-side mini-game. Build your squad, manage transfers, and compete in leagues with friends.">
   </head>
   <body>
-    <div id="root">
-      <!-- Temporary fallback content -->
-      <div style="padding: 20px; font-family: Inter, sans-serif; text-align: center;">
-        <h1>Loading Fantasy Mini League...</h1>
-        <p>If this message persists, check the browser console for errors.</p>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Debug script to test if JavaScript works -->
-    <script>
-      console.log("🟢 Inline script executed successfully");
-      console.log("🟢 Document ready state:", document.readyState);
-      window.addEventListener('load', () => {
-        console.log("🟢 Window load event fired");
-        console.log("🟢 Root element:", document.getElementById('root'));
-      });
-      
-      // Test if the main script loads
-      window.addEventListener('error', (event) => {
-        console.error("🔴 Script error:", event.error);
-        console.error("🔴 Error source:", event.filename, "line:", event.lineno);
-      });
-    </script>
   </body>
 </html>

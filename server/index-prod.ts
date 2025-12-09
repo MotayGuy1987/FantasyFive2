@@ -134,4 +134,4 @@ console.error("❌ Seed error:", error);
 }
 
 await runApp(serveStatic);
-})();
+)();

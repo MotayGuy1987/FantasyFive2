@@ -4,6 +4,7 @@ import { type Server } from "node:http";
 
 import express, { type Express } from "express";
 import runApp from "./app";
+import { seedDatabase } from "./seed";
 
 export async function serveStatic(app: Express, _server: Server) {
   console.log("🚀 serveStatic function called!");
@@ -123,4 +124,14 @@ export async function serveStatic(app: Express, _server: Server) {
   }, {} as Record<string, string | undefined>));
   
   await runApp(serveStatic);
+})();
+try {
+console.log("🌱 Running database seed...");
+await seedDatabase();
+console.log("✅ Database seed completed");
+} catch (error) {
+console.error("❌ Seed error:", error);
+}
+
+await runApp(serveStatic);
 })();

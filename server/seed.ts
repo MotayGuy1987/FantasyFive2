@@ -42,6 +42,7 @@ export async function seedDatabase() {
   console.log("Starting database seed...");
 
   try {
+    // Seed players
     for (const playerData of PLAYERS_DATA) {
       const existing = await db
         .select()
@@ -60,7 +61,8 @@ export async function seedDatabase() {
       }
     }
 
-    const adminEmail = "admin@admin.com";
+    // Seed admin user
+    const adminEmail = "admin@fantasyfive.app";
     const [existingAdmin] = await db
       .select()
       .from(users)
@@ -71,20 +73,23 @@ export async function seedDatabase() {
       await db.insert(users).values({
         id: "admin-user-id",
         email: adminEmail,
+        username: "admin",
         password: hashPassword("admin1"),
         firstName: "Admin",
         lastName: "User",
         profileImageUrl: null,
       });
       console.log("Created admin user");
-    } else if (!existingAdmin.password) {
-      // Update existing admin user with password
+    } else if (!existingAdmin.password || !existingAdmin.username) {
+      // Update existing admin user with password and username
       await db.update(users)
-        .set({ password: hashPassword("admin1") })
+        .set({ 
+          password: hashPassword("admin1"),
+          username: "admin"
+        })
         .where(eq(users.email, adminEmail));
-      console.log("Updated admin user with password");
+      console.log("Updated admin user with password and username");
     }
-
 
     console.log("Database seed completed successfully!");
   } catch (error) {
@@ -93,33 +98,15 @@ export async function seedDatabase() {
   }
 }
 
-seedDatabase()
-  .then(() => {
-    console.log("Seed script finished");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Seed script failed:", error);
-    process.exit(1);
-  });
-if (!existingAdmin) {
-  await db.insert(users).values({
-    id: "admin-user-id",
-    email: adminEmail,
-    username: "admin", // Add this line
-    password: hashPassword("admin1"),
-    firstName: "Admin",
-    lastName: "User",
-    profileImageUrl: null,
-  });
-  console.log("Created admin user");
-} else if (!existingAdmin.password || !existingAdmin.username) {
-  // Update existing admin user with password and username
-  await db.update(users)
-    .set({ 
-      password: hashPassword("admin1"),
-      username: "admin" // Add this line
+// Only run if called directly (not when imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedDatabase()
+    .then(() => {
+      console.log("Seed script finished");
+      process.exit(0);
     })
-    .where(eq(users.email, adminEmail));
-  console.log("Updated admin user with password and username");
+    .catch((error) => {
+      console.error("Seed script failed:", error);
+      process.exit(1);
+    });
 }

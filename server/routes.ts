@@ -259,6 +259,43 @@ export function registerRoutes(app: Express): Server {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  app.post("/api/auth/login", async (req: any, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password required" });
+    }
+
+    // Try to find user by username first, then by email as fallback
+    let user = await storage.getUserByUsername(username);
+    if (!user) {
+      user = await storage.getUserByEmail(username); // Allow email as username
+    }
+    
+    if (!user || !user.password) {
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    const [salt, hash] = user.password.split("$");
+    const crypto = require("crypto");
+    const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+
+    if (testHash !== hash) {
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    req.logIn(user, (err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Login failed" });
+      }
+      res.json({ message: "Login successful", user });
+    });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).json({ message: "Login failed" });
+  }
+});
   // Setup authentication and create server
   setupAuth(app);
   const server = createServer(app);

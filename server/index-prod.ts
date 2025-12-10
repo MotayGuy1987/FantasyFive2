@@ -123,15 +123,15 @@ export async function serveStatic(app: Express, _server: Server) {
     return obj;
   }, {} as Record<string, string | undefined>));
   
+  // Run database seed first
+  try {
+    console.log("🌱 Running database seed...");
+    await seedDatabase();
+    console.log("✅ Database seed completed");
+  } catch (error) {
+    console.error("❌ Seed error:", error);
+  }
+
+  // Start the app
   await runApp(serveStatic);
 })();
-try {
-console.log("🌱 Running database seed...");
-await seedDatabase();
-console.log("✅ Database seed completed");
-} catch (error) {
-console.error("❌ Seed error:", error);
-}
-
-await runApp(serveStatic);
-)();

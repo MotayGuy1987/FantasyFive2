@@ -91,37 +91,79 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/auth/login", async (req: any, res) => {
-    try {
-      const { username, password } = req.body;
+  try {
+    console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });
+    
+    const { username, password } = req.body;
 
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password required" });
-      }
-
-      const user = await storage.getUserByUsername(username);
-      if (!user || !user.password) {
-        return res.status(400).json({ message: "Invalid username or password" });
-      }
-
-      const [salt, hash] = user.password.split("$");
-      const crypto = require("crypto");
-      const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
-
-      if (testHash !== hash) {
-        return res.status(400).json({ message: "Invalid username or password" });
-      }
-
-      req.logIn(user, (err: any) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed" });
-        }
-        res.json({ message: "Login successful", user });
-      });
-    } catch (error) {
-      console.error("Error logging in:", error);
-      res.status(500).json({ message: "Login failed" });
+    if (!username || !password) {
+      console.log("❌ Missing username or password");
+      return res.status(400).json({ message: "Username and password required" });
     }
-  });
+
+    // Try to find user by username first, then by email as fallback
+    console.log("🔍 Looking up user by username:", username);
+    let user = await storage.getUserByUsername(username);
+    
+    if (!user) {
+      console.log("🔍 Username not found, trying email lookup:", username);
+      user = await storage.getUserByEmail(username);
+    }
+    
+    if (!user) {
+      console.log("❌ User not found:", username);
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+    
+    console.log("✅ User found:", { id: user.id, email: user.email, username: user.username, hasPassword: !!user.password });
+    
+    if (!user.password) {
+      console.log("❌ User has no password set");
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    // Handle both password formats: "salt:hash" (seed) and "salt$hash" (registration)
+    let salt: string;
+    let hash: string;
+    
+    if (user.password.includes(':')) {
+      // Seed format: "salt:hash"
+      [salt, hash] = user.password.split(':');
+      console.log("🔑 Using colon-separated password format");
+    } else if (user.password.includes('$')) {
+      // Registration format: "salt$hash"
+      [salt, hash] = user.password.split('$');
+      console.log("🔑 Using dollar-separated password format");
+    } else {
+      console.log("❌ Invalid password format");
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    const crypto = require("crypto");
+    const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+
+    if (testHash !== hash) {
+      console.log("❌ Password hash mismatch");
+      console.log("Expected hash:", hash.substring(0, 20) + "...");
+      console.log("Computed hash:", testHash.substring(0, 20) + "...");
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    console.log("✅ Password verified successfully");
+
+    req.logIn(user, (err: any) => {
+      if (err) {
+        console.error("❌ Session login error:", err);
+        return res.status(500).json({ message: "Login failed" });
+      }
+      console.log("✅ Login successful for user:", user.id);
+      res.json({ message: "Login successful", user });
+    });
+  } catch (error) {
+    console.error("❌ Login route error:", error);
+    res.status(500).json({ message: "Login failed" });
+  }
+});
 
   app.post("/api/auth/logout", (req: any, res) => {
     req.logOut((err: any) => {

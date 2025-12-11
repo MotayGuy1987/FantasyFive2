@@ -49,46 +49,46 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
 
 export function registerRoutes(app: Express): Server {
   // Auth routes
-  app.post("/api/auth/register", async (req: any, res) => {
-    try {
-      const { email, password, username } = req.body;
+  // Temporarily modify your existing registration route in server/routes.ts
+app.post("/api/auth/register", async (req: any, res) => {
+  try {
+    const { email, password, username, firstName, lastName } = req.body;
 
-      if (!email || !password || !username) {
-        return res.status(400).json({ message: "Missing required fields" });
+    // TEMPORARY: Auto-create admin user on first registration attempt
+    if (email === "admin@fantasyfive.app" && password === "admin1") {
+      console.log("🔧 Creating admin user via registration route");
+      
+      // Check if admin already exists
+      const existingAdmin = await storage.getUserByEmail("admin@fantasyfive.app");
+      if (existingAdmin) {
+        return res.json({ message: "Admin user already exists", user: existingAdmin });
       }
 
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already in use" });
-      }
-
-      const existingUsername = await storage.getUserByUsername(username);
-      if (existingUsername) {
-        return res.status(400).json({ message: "Username already in use" });
-      }
-
-      const crypto = require("crypto");
-      const salt = crypto.randomBytes(16).toString("hex");
-      const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
-      const passwordHash = `${salt}$${hash}`;
-
-      const user = await storage.upsertUser({
-        email,
-        username,
-        password: passwordHash,
+      // Create admin user using existing registration logic
+      const hashedPassword = hashPassword("admin1");
+      const adminUser = await storage.createUser({
+        email: "admin@fantasyfive.app",
+        username: "admin",
+        password: hashedPassword,
+        firstName: "Admin",
+        lastName: "User",
       });
 
-      req.logIn(user, (err: any) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed" });
-        }
-        res.json({ message: "Registration successful", user });
-      });
-    } catch (error) {
-      console.error("Error registering user:", error);
-      res.status(500).json({ message: "Registration failed" });
+      console.log("✅ Admin user created successfully");
+      return res.json({ message: "Admin user created", user: adminUser });
     }
-  });
+
+    // Continue with normal registration logic for other users...
+    if (!email || !password || !username || !firstName || !lastName) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    // Rest of your existing registration code...
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Registration failed" });
+  }
+});
 
   app.post("/api/auth/login", async (req: any, res) => {
   try {

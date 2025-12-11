@@ -343,3 +343,38 @@ export function registerRoutes(app: Express): Server {
   const server = createServer(app);
   return server;
 }
+// Temporary admin creation route - REMOVE AFTER USING
+app.post("/api/create-admin", async (req: any, res) => {
+  try {
+    const adminEmail = "admin@fantasyfive.app";
+    
+    // Check if admin already exists
+    const existingAdmin = await storage.getUserByEmail(adminEmail);
+    if (existingAdmin) {
+      return res.json({ message: "Admin already exists" });
+    }
+
+    // Create password hash (same algorithm as registration)
+    const crypto = require("crypto");
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.pbkdf2Sync("admin1", salt, 100000, 64, "sha256").toString("hex");
+    const hashedPassword = `${salt}$${hash}`;
+
+    // Create admin user
+    const [adminUser] = await db.insert(users).values({
+      id: "admin-user-id",
+      email: adminEmail,
+      username: "admin",
+      password: hashedPassword,
+      firstName: "Admin",
+      lastName: "User",
+      profileImageUrl: null,
+    }).returning();
+
+    console.log("✅ Admin user created:", adminUser);
+    res.json({ message: "Admin user created successfully", user: adminUser });
+  } catch (error) {
+    console.error("❌ Error creating admin:", error);
+    res.status(500).json({ message: "Failed to create admin", error: error.message });
+  }
+});

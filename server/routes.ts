@@ -344,6 +344,7 @@ export function registerRoutes(app: Express): Server {
   return server;
 }
 // Temporary admin creation route - REMOVE AFTER USING
+// Temporary admin creation route - REMOVE AFTER USING  
 app.post("/api/create-admin", async (req: any, res) => {
   try {
     const adminEmail = "admin@fantasyfive.app";
@@ -351,28 +352,35 @@ app.post("/api/create-admin", async (req: any, res) => {
     // Check if admin already exists
     const existingAdmin = await storage.getUserByEmail(adminEmail);
     if (existingAdmin) {
-      return res.json({ message: "Admin already exists" });
+      return res.json({ message: "Admin already exists", user: existingAdmin });
     }
 
-    // Create password hash (same algorithm as registration)
+    // Create password hash
     const crypto = require("crypto");
     const salt = crypto.randomBytes(16).toString("hex");
     const hash = crypto.pbkdf2Sync("admin1", salt, 100000, 64, "sha256").toString("hex");
     const hashedPassword = `${salt}$${hash}`;
 
-    // Create admin user
-    const [adminUser] = await db.insert(users).values({
-      id: "admin-user-id",
-      email: adminEmail,
-      username: "admin",
-      password: hashedPassword,
-      firstName: "Admin",
-      lastName: "User",
-      profileImageUrl: null,
-    }).returning();
+    // Direct SQL insert to avoid schema issues
+    const { neon } = require("@neondatabase/serverless");
+    const sql = neon(process.env.DATABASE_URL!);
+    
+    const result = await sql`
+      INSERT INTO users (id, email, username, password, "firstName", "lastName", "profileImageUrl")
+      VALUES (
+        'admin-user-id',
+        ${adminEmail},
+        'admin',
+        ${hashedPassword},
+        'Admin',
+        'User',
+        NULL
+      )
+      RETURNING id, email, username, "firstName", "lastName"
+    `;
 
-    console.log("✅ Admin user created:", adminUser);
-    res.json({ message: "Admin user created successfully", user: adminUser });
+    console.log("✅ Admin user created:", result[0]);
+    res.json({ message: "Admin user created successfully", user: result[0] });
   } catch (error) {
     console.error("❌ Error creating admin:", error);
     res.status(500).json({ message: "Failed to create admin", error: error.message });

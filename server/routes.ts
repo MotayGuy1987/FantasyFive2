@@ -49,121 +49,121 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
 
 export function registerRoutes(app: Express): Server {
   // Auth routes
-  // Temporarily modify your existing registration route in server/routes.ts
-app.post("/api/auth/register", async (req: any, res) => {
-  try {
-    const { email, password, username, firstName, lastName } = req.body;
+  app.post("/api/auth/register", async (req: any, res) => {
+    try {
+      const { email, password, username, firstName, lastName } = req.body;
 
-    // TEMPORARY: Auto-create admin user on first registration attempt
-    if (email === "admin@fantasyfive.app" && password === "admin1") {
-      console.log("🔧 Creating admin user via registration route");
-      
-      // Check if admin already exists
-      const existingAdmin = await storage.getUserByEmail("admin@fantasyfive.app");
-      if (existingAdmin) {
-        return res.json({ message: "Admin user already exists", user: existingAdmin });
+      if (!email || !password || !username || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields required" });
       }
 
-      // Create admin user using existing registration logic
-      const hashedPassword = hashPassword("admin1");
-      const adminUser = await storage.createUser({
-        email: "admin@fantasyfive.app",
-        username: "admin",
-        password: hashedPassword,
-        firstName: "Admin",
-        lastName: "User",
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already in use" });
+      }
+
+      const crypto = require("crypto");
+      const salt = crypto.randomBytes(16).toString("hex");
+      const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+      const passwordHash = `${salt}$${hash}`;
+
+      const user = await storage.createUser({
+        email,
+        username,
+        password: passwordHash,
+        firstName,
+        lastName,
       });
 
-      console.log("✅ Admin user created successfully");
-      return res.json({ message: "Admin user created", user: adminUser });
+      req.logIn(user, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json({ message: "Registration successful", user });
+      });
+    } catch (error) {
+      console.error("Error registering user:", error);
+      res.status(500).json({ message: "Registration failed" });
     }
-
-    // Continue with normal registration logic for other users...
-    if (!email || !password || !username || !firstName || !lastName) {
-      return res.status(400).json({ message: "All fields required" });
-    }
-
-    // Rest of your existing registration code...
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Registration failed" });
-  }
-});
+  });
 
   app.post("/api/auth/login", async (req: any, res) => {
-  try {
-    console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });
-    
-    const { username, password } = req.body;
+    try {
+      console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });
+      
+      const { username, password } = req.body;
 
-    if (!username || !password) {
-      console.log("❌ Missing username or password");
-      return res.status(400).json({ message: "Username and password required" });
-    }
-
-    // Try to find user by username first, then by email as fallback
-    console.log("🔍 Looking up user by username:", username);
-    let user = await storage.getUserByUsername(username);
-    
-    if (!user) {
-      console.log("🔍 Username not found, trying email lookup:", username);
-      user = await storage.getUserByEmail(username);
-    }
-    
-    if (!user) {
-      console.log("❌ User not found:", username);
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-    
-    console.log("✅ User found:", { id: user.id, email: user.email, username: user.username, hasPassword: !!user.password });
-    
-    if (!user.password) {
-      console.log("❌ User has no password set");
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-
-    // Handle both password formats: "salt:hash" (seed) and "salt$hash" (registration)
-    let salt: string;
-    let hash: string;
-    
-    if (user.password.includes(':')) {
-      // Seed format: "salt:hash"
-      [salt, hash] = user.password.split(':');
-      console.log("🔑 Using colon-separated password format");
-    } else if (user.password.includes('$')) {
-      // Registration format: "salt$hash"
-      [salt, hash] = user.password.split('$');
-      console.log("🔑 Using dollar-separated password format");
-    } else {
-      console.log("❌ Invalid password format");
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-
-    const crypto = require("crypto");
-    const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
-
-    if (testHash !== hash) {
-      console.log("❌ Password hash mismatch");
-      console.log("Expected hash:", hash.substring(0, 20) + "...");
-      console.log("Computed hash:", testHash.substring(0, 20) + "...");
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-
-    console.log("✅ Password verified successfully");
-
-    req.logIn(user, (err: any) => {
-      if (err) {
-        console.error("❌ Session login error:", err);
-        return res.status(500).json({ message: "Login failed" });
+      if (!username || !password) {
+        console.log("❌ Missing username or password");
+        return res.status(400).json({ message: "Username and password required" });
       }
-      console.log("✅ Login successful for user:", user.id);
-      res.json({ message: "Login successful", user });
-    });
-  } catch (error) {
-    console.error("❌ Login route error:", error);
-    res.status(500).json({ message: "Login failed" });
-  }
-});
+
+      // Try to find user by username first, then by email as fallback
+      console.log("🔍 Looking up user by username:", username);
+      let user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        console.log("🔍 Username not found, trying email lookup:", username);
+        user = await storage.getUserByEmail(username);
+      }
+      
+      if (!user) {
+        console.log("❌ User not found:", username);
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+      
+      console.log("✅ User found:", { id: user.id, email: user.email, username: user.username, hasPassword: !!user.password });
+      
+      if (!user.password) {
+        console.log("❌ User has no password set");
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+
+      // Handle both password formats: "salt:hash" (seed) and "salt$hash" (registration)
+      let salt: string;
+      let hash: string;
+      
+      if (user.password.includes(':')) {
+        // Seed format: "salt:hash"
+        [salt, hash] = user.password.split(':');
+        console.log("🔑 Using colon-separated password format");
+      } else if (user.password.includes('$')) {
+        // Registration format: "salt$hash"
+        [salt, hash] = user.password.split('$');
+        console.log("🔑 Using dollar-separated password format");
+      } else {
+        console.log("❌ Invalid password format");
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+
+      const crypto = require("crypto");
+      const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+
+      if (testHash !== hash) {
+        console.log("❌ Password hash mismatch");
+        return res.status(400).json({ message: "Invalid username or password" });
+      }
+
+      console.log("✅ Password verified successfully");
+
+      req.logIn(user, (err: any) => {
+        if (err) {
+          console.error("❌ Session login error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        console.log("✅ Login successful for user:", user.id);
+        res.json({ message: "Login successful", user });
+      });
+    } catch (error) {
+      console.error("❌ Login route error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
 
   app.post("/api/auth/logout", (req: any, res) => {
     req.logOut((err: any) => {
@@ -184,6 +184,100 @@ app.post("/api/auth/register", async (req: any, res) => {
     }
   });
 
+  // User profile routes
+  app.patch('/api/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const { avatarPersonColor, avatarBgColor, nationality, favoriteTeam } = req.body;
+      const userId = req.user.id;
+
+      const updatedUser = await storage.updateUserProfile(userId, {
+        avatarPersonColor,
+        avatarBgColor,
+        nationality,
+        favoriteTeam,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+    app.get('/api/user/team-name-cooldown', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const lastChanged = user.lastTeamNameChange;
+      if (!lastChanged) {
+        return res.json({ canChange: true, timeRemaining: 0 });
+      }
+
+      const cooldownPeriod = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+      const timeSinceLastChange = Date.now() - new Date(lastChanged).getTime();
+      const timeRemaining = Math.max(0, cooldownPeriod - timeSinceLastChange);
+
+      res.json({
+        canChange: timeRemaining === 0,
+        timeRemaining: timeRemaining,
+        cooldownDays: Math.ceil(timeRemaining / (24 * 60 * 60 * 1000))
+      });
+    } catch (error) {
+      console.error("Error checking team name cooldown:", error);
+      res.status(500).json({ message: "Failed to check cooldown" });
+    }
+  });
+
+  app.patch('/api/user/team-name', isAuthenticated, async (req: any, res) => {
+    try {
+      const { teamName } = req.body;
+      const userId = req.user.id;
+
+      if (!teamName || teamName.trim().length === 0) {
+        return res.status(400).json({ message: "Team name is required" });
+      }
+
+      if (teamName.length > 50) {
+        return res.status(400).json({ message: "Team name must be 50 characters or less" });
+      }
+
+      // Check cooldown
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const lastChanged = user.lastTeamNameChange;
+      if (lastChanged) {
+        const cooldownPeriod = 7 * 24 * 60 * 60 * 1000; // 7 days
+        const timeSinceLastChange = Date.now() - new Date(lastChanged).getTime();
+        
+        if (timeSinceLastChange < cooldownPeriod) {
+          const timeRemaining = cooldownPeriod - timeSinceLastChange;
+          const daysRemaining = Math.ceil(timeRemaining / (24 * 60 * 60 * 1000));
+          return res.status(400).json({ 
+            message: `You can only change your team name once every 7 days. Please wait ${daysRemaining} more day(s).` 
+          });
+        }
+      }
+
+      const updatedUser = await storage.updateUserTeamName(userId, teamName.trim());
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating team name:", error);
+      res.status(500).json({ message: "Failed to update team name" });
+    }
+  });
+
   // Player routes
   app.get("/api/players", isAuthenticated, async (req, res) => {
     try {
@@ -192,6 +286,17 @@ app.post("/api/auth/register", async (req: any, res) => {
     } catch (error) {
       console.error("Error fetching players:", error);
       res.status(500).json({ message: "Failed to fetch players" });
+    }
+  });
+
+  app.get("/api/player-performance/:playerId", isAuthenticated, async (req, res) => {
+    try {
+      const { playerId } = req.params;
+      const performance = await storage.getPlayerPerformance(Number(playerId));
+      res.json(performance || []);
+    } catch (error) {
+      console.error("Error fetching player performance:", error);
+      res.status(500).json({ message: "Failed to fetch player performance" });
     }
   });
 
@@ -217,172 +322,271 @@ app.post("/api/auth/register", async (req: any, res) => {
     try {
       const userId = req.user.id;
       const userRecord = await storage.getUser(userId);
-      const isAdmin = userRecord?.email === "admin@admin.com";
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
       const budget = isAdmin ? 1000.0 : 50.0;
       
       const validation = createTeamSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json({ message: "Invalid team data", errors: validation.error.errors });
+        return res.status(400).json({ 
+          message: "Invalid team data", 
+          errors: validation.error.issues 
+        });
       }
+
+      const { playerIds } = validation.data;
+
+      // Validate team composition and budget
+      const players = await storage.getPlayersByIds(playerIds);
+      const validationResult = validateTransfer(players, budget);
       
-      const { teamName, players: requestedPlayers } = validation.data;
-
-      const playerIds = requestedPlayers.map((p: any) => p.playerId);
-      const players = await Promise.all(
-        playerIds.map((id: string) => storage.getPlayer(id))
-      );
-
-      if (players.some((p) => !p)) {
-        return res.status(400).json({ message: "Invalid players" });
+      if (!validationResult.isValid) {
+        return res.status(400).json({ message: validationResult.error });
       }
 
-      const totalCost = players.reduce((sum, p) => sum + parseFloat(p!.price), 0);
-      if (totalCost > budget) {
-        return res.status(400).json({ message: "Team exceeds budget" });
+      // Check if user already has a team
+      const existingTeam = await storage.getTeamByUserId(userId);
+      if (existingTeam) {
+        return res.status(400).json({ message: "You already have a team" });
       }
 
-      let team = await storage.getTeamByUserId(userId);
-      if (!team) {
-        const currentGameweek = await storage.getCurrentGameweek();
-        team = await storage.createTeam({ 
-          userId, 
-          budget: String(budget), 
-          freeTransfers: 1,
-          firstGameweekId: currentGameweek?.id || undefined,
-        });
-      }
-
-      await storage.deleteTeamPlayers(team.id);
-
-      for (const playerData of requestedPlayers) {
-        await storage.createTeamPlayer({
-          teamId: team.id,
-          playerId: playerData.playerId,
-          isCaptain: playerData.isCaptain,
-          isOnBench: playerData.isOnBench,
-          position: playerData.position,
-        });
-      }
-
-      if (userRecord && !userRecord.teamName) {
-        await storage.updateUserTeamName(userId, teamName);
-      }
-
-      res.json({ team, message: "Team created successfully" });
+      const team = await storage.createTeam(userId, playerIds);
+      res.json(team);
     } catch (error) {
       console.error("Error creating team:", error);
       res.status(500).json({ message: "Failed to create team" });
     }
   });
 
-  // Gameweek routes
-  app.get("/api/gameweeks", isAuthenticated, async (req, res) => {
+  app.put("/api/team", isAuthenticated, async (req: any, res) => {
     try {
-      const gameweeks = await storage.getAllGameweeks();
-      res.json(gameweeks);
-    } catch (error) {
-      console.error("Error fetching gameweeks:", error);
-      res.status(500).json({ message: "Failed to fetch gameweeks" });
-    }
-  });
-
-  app.get("/api/gameweeks/current", isAuthenticated, async (req, res) => {
-    try {
-      const gameweek = await storage.getCurrentGameweek();
-      res.json(gameweek);
-    } catch (error) {
-      console.error("Error fetching current gameweek:", error);
-      res.status(500).json({ message: "Failed to fetch gameweek" });
-    }
-  });
-
-  // Basic health check route
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
-  app.post("/api/auth/login", async (req: any, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password required" });
-    }
-
-    // Try to find user by username first, then by email as fallback
-    let user = await storage.getUserByUsername(username);
-    if (!user) {
-      user = await storage.getUserByEmail(username); // Allow email as username
-    }
-    
-    if (!user || !user.password) {
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-
-    const [salt, hash] = user.password.split("$");
-    const crypto = require("crypto");
-    const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
-
-    if (testHash !== hash) {
-      return res.status(400).json({ message: "Invalid username or password" });
-    }
-
-    req.logIn(user, (err: any) => {
-      if (err) {
-        return res.status(500).json({ message: "Login failed" });
+      const userId = req.user.id;
+      const userRecord = await storage.getUser(userId);
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const budget = isAdmin ? 1000.0 : 50.0;
+      
+      const validation = createTeamSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid team data", 
+          errors: validation.error.issues 
+        });
       }
-      res.json({ message: "Login successful", user });
-    });
-  } catch (error) {
-    console.error("Error logging in:", error);
-    res.status(500).json({ message: "Login failed" });
-  }
-});
-  // Setup authentication and create server
-  setupAuth(app);
-  const server = createServer(app);
-  return server;
-}
-// Temporary admin creation route - REMOVE AFTER USING
-// Temporary admin creation route - REMOVE AFTER USING  
-app.post("/api/create-admin", async (req: any, res) => {
-  try {
-    const adminEmail = "admin@fantasyfive.app";
-    
-    // Check if admin already exists
-    const existingAdmin = await storage.getUserByEmail(adminEmail);
-    if (existingAdmin) {
-      return res.json({ message: "Admin already exists", user: existingAdmin });
+
+      const { playerIds } = validation.data;
+
+      // Validate team composition and budget
+      const players = await storage.getPlayersByIds(playerIds);
+      const validationResult = validateTransfer(players, budget);
+      
+      if (!validationResult.isValid) {
+        return res.status(400).json({ message: validationResult.error });
+      }
+
+      const team = await storage.updateTeam(userId, playerIds);
+      res.json(team);
+    } catch (error) {
+      console.error("Error updating team:", error);
+      res.status(500).json({ message: "Failed to update team" });
     }
+  });
 
-    // Create password hash
-    const crypto = require("crypto");
-    const salt = crypto.randomBytes(16).toString("hex");
-    const hash = crypto.pbkdf2Sync("admin1", salt, 100000, 64, "sha256").toString("hex");
-    const hashedPassword = `${salt}$${hash}`;
+  app.get("/api/teams/leaderboard", isAuthenticated, async (req, res) => {
+    try {
+      const leaderboard = await storage.getLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
 
-    // Direct SQL insert to avoid schema issues
-    const { neon } = require("@neondatabase/serverless");
-    const sql = neon(process.env.DATABASE_URL!);
-    
-    const result = await sql`
-      INSERT INTO users (id, email, username, password, "firstName", "lastName", "profileImageUrl")
-      VALUES (
-        'admin-user-id',
-        ${adminEmail},
-        'admin',
-        ${hashedPassword},
-        'Admin',
-        'User',
-        NULL
-      )
-      RETURNING id, email, username, "firstName", "lastName"
-    `;
+  // Transfer routes
+  app.get("/api/transfers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const transfers = await storage.getUserTransfers(userId);
+      res.json(transfers);
+    } catch (error) {
+      console.error("Error fetching transfers:", error);
+      res.status(500).json({ message: "Failed to fetch transfers" });
+    }
+  });
 
-    console.log("✅ Admin user created:", result[0]);
-    res.json({ message: "Admin user created successfully", user: result[0] });
-  } catch (error) {
-    console.error("❌ Error creating admin:", error);
-    res.status(500).json({ message: "Failed to create admin", error: error.message });
-  }
-});
+  app.post("/api/transfers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const validation = insertTransferSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid transfer data", 
+          errors: validation.error.issues 
+        });
+      }
+
+      const { playerInId, playerOutId } = validation.data;
+
+      // Get current team
+      const team = await storage.getTeamByUserId(userId);
+      if (!team) {
+        return res.status(400).json({ message: "You don't have a team yet" });
+      }
+
+      // Check if player being transferred out is in the team
+      const teamPlayerIds = team.players.map(tp => tp.playerId);
+      if (!teamPlayerIds.includes(playerOutId)) {
+        return res.status(400).json({ message: "Player to transfer out is not in your team" });
+      }
+
+      // Check if player being transferred in is already in the team
+      if (teamPlayerIds.includes(playerInId)) {
+        return res.status(400).json({ message: "Player to transfer in is already in your team" });
+      }
+
+      // Create new team composition
+      const newPlayerIds = teamPlayerIds.map(id => id === playerOutId ? playerInId : id);
+      
+      // Validate new team composition
+      const userRecord = await storage.getUser(userId);
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const budget = isAdmin ? 1000.0 : 50.0;
+      
+      const players = await storage.getPlayersByIds(newPlayerIds);
+      const validationResult = validateTransfer(players, budget);
+      
+      if (!validationResult.isValid) {
+        return res.status(400).json({ message: validationResult.error });
+      }
+
+      // Record the transfer
+      const transfer = await storage.createTransfer({
+        userId,
+        playerInId,
+        playerOutId,
+        transferDate: new Date().toISOString()
+      });
+
+      // Update the team
+      await storage.updateTeam(userId, newPlayerIds);
+
+      res.json(transfer);
+    } catch (error) {
+      console.error("Error creating transfer:", error);
+      res.status(500).json({ message: "Failed to create transfer" });
+    }
+  });
+
+  // League routes
+  app.get("/api/leagues", isAuthenticated, async (req, res) => {
+    try {
+      const leagues = await storage.getAllLeagues();
+      res.json(leagues);
+    } catch (error) {
+      console.error("Error fetching leagues:", error);
+      res.status(500).json({ message: "Failed to fetch leagues" });
+    }
+  });
+
+  app.post("/api/leagues", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const validation = insertLeagueSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid league data", 
+          errors: validation.error.issues 
+        });
+      }
+
+      const league = await storage.createLeague({
+        ...validation.data,
+        createdBy: userId
+      });
+
+      res.json(league);
+    } catch (error) {
+      console.error("Error creating league:", error);
+      res.status(500).json({ message: "Failed to create league" });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/users", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRecord = await storage.getUser(req.user.id);
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/player-performance", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRecord = await storage.getUser(req.user.id);
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const validation = insertPlayerPerformanceSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid performance data", 
+          errors: validation.error.issues 
+        });
+      }
+
+      // Get the player to determine position for scoring
+      const player = await storage.getPlayer(validation.data.playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      // Calculate points based on performance
+      const points = calculatePerformancePoints(player.position, validation.data);
+
+      const performance = await storage.createPlayerPerformance({
+        ...validation.data,
+        points
+      });
+
+      // Aggregate and update team scores
+      await aggregateAndUpsertTeamScores();
+
+      res.json(performance);
+    } catch (error) {
+      console.error("Error creating player performance:", error);
+      res.status(500).json({ message: "Failed to create player performance" });
+    }
+  });
+
+  app.post("/api/admin/aggregate-scores", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRecord = await storage.getUser(req.user.id);
+      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await aggregateAndUpsertTeamScores();
+      res.json({ message: "Scores aggregated successfully" });
+    } catch (error) {
+      console.error("Error aggregating scores:", error);
+      res.status(500).json({ message: "Failed to aggregate scores" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}

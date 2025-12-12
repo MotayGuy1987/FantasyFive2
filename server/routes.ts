@@ -635,7 +635,89 @@ app.post("/api/auth/signup", async (req: any, res) => {
       res.status(500).json({ message: "Failed to aggregate scores" });
     }
   });
+// Admin routes - Add these to your server/routes.ts
+app.get("/api/admin/teams-users", isAuthenticated, async (req: any, res) => {
+  try {
+    const userRecord = await storage.getUser(req.user.id);
+    const isAdmin = userRecord?.email === "admin@admin.com";
+    
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
+    const users = await storage.getAllUsers();
+    const teams = await storage.getAllTeams();
+    
+    // Join teams with their users
+    const teamsWithUsers = await Promise.all(
+      teams.map(async (team) => {
+        const user = await storage.getUser(team.userId);
+        return { ...team, user };
+      })
+    );
+
+    res.json({ teams: teamsWithUsers, users });
+  } catch (error) {
+    console.error("Error fetching admin teams/users:", error);
+    res.status(500).json({ message: "Failed to fetch admin data" });
+  }
+});
+
+app.delete("/api/admin/team/:teamId", isAuthenticated, async (req: any, res) => {
+  try {
+    const userRecord = await storage.getUser(req.user.id);
+    const isAdmin = userRecord?.email === "admin@admin.com";
+    
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { teamId } = req.params;
+    await storage.deleteTeam(teamId);
+    res.json({ message: "Team deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting team:", error);
+    res.status(500).json({ message: "Failed to delete team" });
+  }
+});
+
+app.delete("/api/admin/user/:userId", isAuthenticated, async (req: any, res) => {
+  try {
+    const userRecord = await storage.getUser(req.user.id);
+    const isAdmin = userRecord?.email === "admin@admin.com";
+    
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { userId } = req.params;
+    await storage.deleteUser(userId);
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+});
+
+app.patch("/api/admin/user/:userId/username", isAuthenticated, async (req: any, res) => {
+  try {
+    const userRecord = await storage.getUser(req.user.id);
+    const isAdmin = userRecord?.email === "admin@admin.com";
+    
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { userId } = req.params;
+    const { username } = req.body;
+    
+    const updatedUser = await storage.updateUserUsername(userId, username);
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating username:", error);
+    res.status(500).json({ message: "Failed to update username" });
+  }
+});
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -371,7 +371,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
     try {
       const userId = req.user.id;
       const userRecord = await storage.getUser(userId);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       const budget = isAdmin ? 1000.0 : 50.0;
       
       const validation = createTeamSchema.safeParse(req.body);

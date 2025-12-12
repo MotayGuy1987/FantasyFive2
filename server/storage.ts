@@ -597,6 +597,120 @@ export class DatabaseStorage implements IStorage {
     // Delete user
     await db.delete(users).where(eq(users.id, userId));
   }
+  // Add these methods to the DatabaseStorage class in server/storage.ts
+
+async createUser(userData: {
+  email: string;
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}): Promise<User> {
+  const [user] = await db
+    .insert(users)
+    .values({
+      id: crypto.randomUUID(), // Generate unique ID
+      email: userData.email,
+      username: userData.username,
+      password: userData.password,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+  return user;
+}
+
+async deleteTeam(teamId: string): Promise<void> {
+  await db.delete(teams).where(eq(teams.id, teamId));
+}
+
+async deleteUser(userId: string): Promise<void> {
+  await db.delete(users).where(eq(users.id, userId));
+}
+
+async getUserTransfers(userId: string): Promise<Transfer[]> {
+  const userTeam = await this.getTeamByUserId(userId);
+  if (!userTeam) return [];
+  
+  return await db
+    .select()
+    .from(transfers)
+    .where(eq(transfers.teamId, userTeam.id))
+    .orderBy(desc(transfers.createdAt));
+}
+
+async createTransfer(transferData: InsertTransfer): Promise<Transfer> {
+  const [transfer] = await db.insert(transfers).values(transferData).returning();
+  return transfer;
+}
+
+async getPlayersByIds(playerIds: string[]): Promise<Player[]> {
+  return await db
+    .select()
+    .from(players)
+    .where(players.id.in(playerIds));
+}
+
+async createTeamFromPlayerIds(userId: string, playerIds: string[]): Promise<Team> {
+  // Create the team first
+  const team = await this.createTeam({
+    userId,
+    budget: "50.0",
+    freeTransfers: 1,
+  });
+
+  // Add players to team
+  for (const playerId of playerIds) {
+    await this.createTeamPlayer({
+      teamId: team.id,
+      playerId,
+      isCaptain: false,
+      isOnBench: false,
+      position: "MIDFIELDER", // Default position
+    });
+  }
+
+  return team;
+}
+
+async updateTeamPlayers(userId: string, playerIds: string[]): Promise<Team> {
+  const team = await this.getTeamByUserId(userId);
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  // Delete existing team players
+  await this.deleteTeamPlayers(team.id);
+
+  // Add new players
+  for (const playerId of playerIds) {
+    await this.createTeamPlayer({
+      teamId: team.id,
+      playerId,
+      isCaptain: false,
+      isOnBench: false,
+      position: "MIDFIELDER", // Default position
+    });
+  }
+
+  return team;
+}
+
+async getLeaderboard(): Promise<any[]> {
+  // This is a placeholder - implement based on your scoring logic
+  const teams = await this.getAllTeams();
+  return teams.map(team => ({
+    ...team,
+    totalPoints: 0, // Calculate based on gameweek scores
+    rank: 1,
+  }));
+}
+
+async getAllUsers(): Promise<User[]> {
+  return await db.select().from(users);
+}
 }
 
 export const storage = new DatabaseStorage();

@@ -103,6 +103,15 @@ export interface IStorage {
   upsertGameweekScore(score: InsertGameweekScore): Promise<GameweekScore>;
   
   getMostOwnedPlayer(): Promise<{ players: Player[]; count: number; percentage: number } | null>;
+  // Add these to the IStorage interface
+createUser(userData: { email: string; username: string; password: string; firstName: string; lastName: string }): Promise<User>;
+getUserTransfers(userId: string): Promise<Transfer[]>;
+createTransfer(transferData: InsertTransfer): Promise<Transfer>;
+getPlayersByIds(playerIds: string[]): Promise<Player[]>;
+createTeamFromPlayerIds(userId: string, playerIds: string[]): Promise<Team>;
+updateTeamPlayers(userId: string, playerIds: string[]): Promise<Team>;
+getLeaderboard(): Promise<any[]>;
+getAllUsers(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {

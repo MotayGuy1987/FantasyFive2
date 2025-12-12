@@ -410,7 +410,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
     try {
       const userId = req.user.id;
       const userRecord = await storage.getUser(userId);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       const budget = isAdmin ? 1000.0 : 50.0;
       
       const validation = createTeamSchema.safeParse(req.body);
@@ -497,7 +497,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
       
       // Validate new team composition
       const userRecord = await storage.getUser(userId);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       const budget = isAdmin ? 1000.0 : 50.0;
       
       const players = await storage.getPlayersByIds(newPlayerIds);
@@ -564,7 +564,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
   app.get("/api/admin/users", isAuthenticated, async (req: any, res) => {
     try {
       const userRecord = await storage.getUser(req.user.id);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       
       if (!isAdmin) {
         return res.status(403).json({ message: "Access denied" });
@@ -581,7 +581,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
   app.post("/api/admin/player-performance", isAuthenticated, async (req: any, res) => {
     try {
       const userRecord = await storage.getUser(req.user.id);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       
       if (!isAdmin) {
         return res.status(403).json({ message: "Access denied" });
@@ -622,7 +622,7 @@ app.post("/api/auth/signup", async (req: any, res) => {
   app.post("/api/admin/aggregate-scores", isAuthenticated, async (req: any, res) => {
     try {
       const userRecord = await storage.getUser(req.user.id);
-      const isAdmin = userRecord?.email === "admin@fantasyfive.app";
+      const isAdmin = userRecord?.email === "admin@admin.com";
       
       if (!isAdmin) {
         return res.status(403).json({ message: "Access denied" });

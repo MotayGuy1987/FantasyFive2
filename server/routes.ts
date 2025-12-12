@@ -91,7 +91,55 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Registration failed" });
     }
   });
+// Add this route to match frontend expectation
+app.post("/api/auth/signup", async (req: any, res) => {
+  try {
+    const { email, password, username, firstName, lastName } = req.body;
 
+    // Handle optional fields - if not provided, generate defaults
+    const finalFirstName = firstName?.trim() || username || "User";
+    const finalLastName = lastName?.trim() || "";
+    const finalEmail = email?.trim() || `${username}@temp.com`; // Generate temporary email
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    const existingUser = await storage.getUserByEmail(finalEmail);
+    if (existingUser && email) { // Only check email conflict if email was actually provided
+      return res.status(400).json({ message: "Email already in use" });
+    }
+
+    const existingUsername = await storage.getUserByUsername(username);
+    if (existingUsername) {
+      return res.status(400).json({ message: "Username already in use" });
+    }
+
+    const crypto = require("crypto");
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha256").toString("hex");
+    const passwordHash = `${salt}$${hash}`;
+
+    const user = await storage.createUser({
+      email: finalEmail,
+      username,
+      password: passwordHash,
+      firstName: finalFirstName,
+      lastName: finalLastName,
+    });
+
+    req.logIn(user, (err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Login failed" });
+      }
+      res.json({ message: "Registration successful", user });
+    });
+  } catch (error) {
+    console.error("Error signing up user:", error);
+    res.status(500).json({ message: "Registration failed" });
+  }
+});
+  
   app.post("/api/auth/login", async (req: any, res) => {
     try {
       console.log("🔐 Login attempt:", { username: req.body.username, hasPassword: !!req.body.password });

@@ -49,6 +49,7 @@ function calculatePerformancePoints(playerPosition: string, perf: any): number {
 
 export function registerRoutes(app: Express): Server {
   // Auth routes
+  setupAuth(app);
   app.post("/api/auth/register", async (req: any, res) => {
     try {
       const { email, password, username, firstName, lastName } = req.body;

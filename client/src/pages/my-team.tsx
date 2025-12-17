@@ -39,9 +39,8 @@ function SquadBuilder() {
   });
 
   const getPlayersByPosition = () => {
-    if (!players) return { GK: [], DEF: [], MID: [], FWD: [] };
+    if (!players) return { DEF: [], MID: [], FWD: [] };
     return {
-      GK: players.filter(p => p.position === 'Goalkeeper'),
       DEF: players.filter(p => p.position === 'Defender'), 
       MID: players.filter(p => p.position === 'Midfielder'),
       FWD: players.filter(p => p.position === 'Forward')
@@ -50,13 +49,12 @@ function SquadBuilder() {
 
   const getStartingPositionCounts = () => {
     const starters = selectedPlayers.filter(sp => sp.isStarter);
-    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    const counts = { DEF: 0, MID: 0, FWD: 0 };
     
     starters.forEach(sp => {
       const player = players?.find(p => p.id === sp.playerId);
       if (player) {
-        const pos = player.position === 'Goalkeeper' ? 'GK' :
-                   player.position === 'Defender' ? 'DEF' :
+        const pos = player.position === 'Defender' ? 'DEF' :
                    player.position === 'Midfielder' ? 'MID' : 'FWD';
         counts[pos]++;
       }
@@ -73,15 +71,8 @@ function SquadBuilder() {
     if (currentSelection >= 6) return false;
 
     if (asStarter) {
-      const counts = getStartingPositionCounts();
-      const pos = player.position === 'Goalkeeper' ? 'GK' :
-                 player.position === 'Defender' ? 'DEF' :
-                 player.position === 'Midfielder' ? 'MID' : 'FWD';
-      
       const startersCount = selectedPlayers.filter(sp => sp.isStarter).length;
       if (startersCount >= 5) return false;
-
-      // Must have at least 1 of each position, but can have multiple
       return true;
     }
 
@@ -89,13 +80,8 @@ function SquadBuilder() {
   };
 
   const canMoveToStarter = (playerId: string) => {
-    const player = players?.find(p => p.id === playerId);
-    if (!player) return false;
-
     const currentStarters = selectedPlayers.filter(sp => sp.isStarter).length;
-    if (currentStarters >= 5) return false;
-
-    return true;
+    return currentStarters < 5;
   };
 
   const canMoveToBench = (playerId: string) => {
@@ -103,15 +89,14 @@ function SquadBuilder() {
     if (!player) return false;
 
     // Check if removing this starter would break the "at least 1 of each position" rule
-    const pos = player.position === 'Goalkeeper' ? 'GK' :
-               player.position === 'Defender' ? 'DEF' :
+    const pos = player.position === 'Defender' ? 'DEF' :
                player.position === 'Midfielder' ? 'MID' : 'FWD';
     
     const counts = getStartingPositionCounts();
     counts[pos]--; // Simulate removing this player
 
     // Must have at least 1 of each position in starting XI
-    return counts.GK >= 1 && counts.DEF >= 1 && counts.MID >= 1 && counts.FWD >= 1;
+    return counts.DEF >= 1 && counts.MID >= 1 && counts.FWD >= 1;
   };
 
   const togglePlayer = (playerId: string) => {
@@ -148,9 +133,6 @@ function SquadBuilder() {
 
     if (benchPlayer === playerId) {
       setBenchPlayer(null);
-      // Auto-select another bench player if available
-      const newBench = selectedPlayers.find(sp => !sp.isStarter && sp.playerId !== playerId);
-      if (newBench) setBenchPlayer(newBench.playerId);
     }
   };
 
@@ -178,7 +160,7 @@ function SquadBuilder() {
 
   const isValidFormation = () => {
     const counts = getStartingPositionCounts();
-    return counts.GK >= 1 && counts.DEF >= 1 && counts.MID >= 1 && counts.FWD >= 1;
+    return counts.DEF >= 1 && counts.MID >= 1 && counts.FWD >= 1;
   };
 
   const canSubmit = () => {
@@ -218,7 +200,7 @@ function SquadBuilder() {
             <span>Bench: {benchCount}/1</span>
           </div>
           <div className="text-sm">
-            Formation: {getStartingPositionCounts().GK}GK-{getStartingPositionCounts().DEF}DEF-{getStartingPositionCounts().MID}MID-{getStartingPositionCounts().FWD}FWD
+            Formation: {getStartingPositionCounts().DEF}DEF-{getStartingPositionCounts().MID}MID-{getStartingPositionCounts().FWD}FWD
           </div>
           {!isValidFormation() && (
             <p className="text-sm text-red-500">⚠ Need at least 1 of each position starting</p>
@@ -230,11 +212,10 @@ function SquadBuilder() {
         <Card key={position}>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              {position === 'GK' && <Shield className="h-5 w-5" />}
               {position === 'DEF' && <Shield className="h-5 w-5" />}
               {position === 'MID' && <Target className="h-5 w-5" />}
               {position === 'FWD' && <Zap className="h-5 w-5" />}
-              <span>{position === 'GK' ? 'Goalkeepers' : position === 'DEF' ? 'Defenders' : position === 'MID' ? 'Midfielders' : 'Forwards'}</span>
+              <span>{position === 'DEF' ? 'Defenders' : position === 'MID' ? 'Midfielders' : 'Forwards'}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -249,15 +230,13 @@ function SquadBuilder() {
                 return (
                   <div key={player.id} className="flex items-center justify-between p-3 border rounded">
                     <div className="flex items-center space-x-3">
-                      <div className="flex flex-col space-y-1">
-                        <Button
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => togglePlayer(player.id)}
-                        >
-                          {isSelected ? "Remove" : "Add"}
-                        </Button>
-                      </div>
+                      <Button
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => togglePlayer(player.id)}
+                      >
+                        {isSelected ? "Remove" : "Add"}
+                      </Button>
                       
                       <div>
                         <div className="font-medium">{player.name}</div>
@@ -355,7 +334,7 @@ function SquadBuilder() {
               </div>
               
               <div className="border-t pt-2">
-                                <div className="text-sm font-medium mb-2">Bench Player</div>
+                <div className="text-sm font-medium mb-2">Bench Player</div>
                 {selectedPlayers.filter(sp => !sp.isStarter).map((sp) => {
                   const player = players?.find(p => p.id === sp.playerId);
                   if (!player) return null;
@@ -364,7 +343,7 @@ function SquadBuilder() {
                     <div key={sp.playerId} className="text-center p-2 border rounded bg-yellow-50">
                       <div className="text-sm font-medium">{player.name}</div>
                       <div className="text-xs text-muted-foreground">{player.position}</div>
-                      {benchPlayer === sp.playerId && <Badge variant="secondary" className="mt-1">Bench</Badge>}
+                      <Badge variant="secondary" className="mt-1">Bench</Badge>
                     </div>
                   );
                 })}
@@ -386,7 +365,7 @@ export default function MyTeam() {
     enabled: isAuthenticated,
   });
 
-  const { data: teamPlayers, isLoading: playersLoading } = useQuery<(TeamPlayer & { player: Player })[]>({
+    const { data: teamPlayers, isLoading: playersLoading } = useQuery<(TeamPlayer & { player: Player })[]>({
     queryKey: ["/api/team/players"],
     enabled: isAuthenticated && !!team,
   });
@@ -424,7 +403,6 @@ export default function MyTeam() {
   // Show team management view
   const starters = teamPlayers.filter(tp => !tp.isOnBench);
   const bench = teamPlayers.filter(tp => tp.isOnBench);
-  const captain = teamPlayers.find(tp => tp.isCaptain);
 
   return (
     <div className="p-6 space-y-6">
